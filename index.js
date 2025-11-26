@@ -12,10 +12,10 @@ app.use(express.json());
 app.use(cors());
 app.use(logger);
 
-// 首页
-app.get("/", async (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+// 静态文件服务（React 构建产物）
+app.use(express.static(path.join(__dirname, "public")));
+
+// API 路由
 
 // 更新计数
 app.post("/api/count", async (req, res) => {
@@ -49,7 +49,16 @@ app.get("/api/wx_openid", async (req, res) => {
   }
 });
 
-const port = process.env.PORT || 80;
+// React 应用路由处理（所有非 API 路由都返回 index.html）
+app.get("*", (req, res) => {
+  // 排除 API 路由
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ code: 404, message: "Not found" });
+  }
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+const port = process.env.PORT || 3000;
 
 async function bootstrap() {
   await initDB();
