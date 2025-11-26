@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const { init: initDB, Counter } = require("./db");
+const { catJudgementHandler } = require("./routes/catJudgement");
 
 const logger = morgan("tiny");
 
@@ -48,6 +49,8 @@ app.get("/api/wx_openid", async (req, res) => {
     res.send(req.headers["x-wx-openid"]);
   }
 });
+// 猫猫法官接口
+app.post("/api/cat-judgement", catJudgementHandler);
 
 // React 应用路由处理（所有非 API 路由都返回 index.html）
 app.get("*", (req, res) => {

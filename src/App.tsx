@@ -5,7 +5,7 @@ import { VerdictDisplay } from "./components/VerdictDisplay";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { Home } from "./components/Home";
 import { AppState, ConflictData, VerdictResult } from "./types";
-// import { getCatJudgement } from "./services/geminiService";
+import { getCatJudgement } from "./services/api";
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.HOME);
@@ -16,15 +16,15 @@ const App: React.FC = () => {
     setConflictData(data);
     setAppState(AppState.THINKING);
 
-    // try {
-    //   const verdict = await getCatJudgement(data);
-    //   setResult(verdict);
-    //   setAppState(AppState.RESULT);
-    // } catch (error) {
-    //   console.error("Error getting judgement:", error);
-    //   alert("猫猫法官去睡觉了，请稍后再试喵！(API Error)");
-    //   setAppState(AppState.INPUT);
-    // }
+    try {
+      const verdict = await getCatJudgement(data);
+      setResult(verdict);
+      setAppState(AppState.RESULT);
+    } catch (error) {
+      console.error("Error getting judgement:", error);
+      alert("猫猫法官去睡觉了，请稍后再试喵！(API Error)");
+      setAppState(AppState.INPUT);
+    }
   };
 
   const handleReset = () => {

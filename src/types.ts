@@ -1,13 +1,9 @@
-
-export type JudgeStyle = 'sassy' | 'strict' | 'greedy';
-
 export interface ConflictData {
   cause: string;
   sideA: string; // Usually the user
   sideB: string; // The partner
   nameA: string;
   nameB: string;
-  judgeStyle: JudgeStyle;
 }
 
 export interface AdviceItem {
@@ -16,7 +12,7 @@ export interface AdviceItem {
 }
 
 export interface VerdictResult {
-  winner: 'A' | 'B' | 'Draw';
+  winner: "A" | "B" | "Draw";
   winnerName: string;
   verdictTitle: string;
   funnyComment: string;
@@ -31,5 +27,5 @@ export enum AppState {
   INPUT,
   THINKING,
   RESULT,
-  ERROR
+  ERROR,
 }
