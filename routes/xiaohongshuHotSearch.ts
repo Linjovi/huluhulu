@@ -17,16 +17,22 @@ interface StandardHotSearchItem {
   iconType: string | null;
 }
 
-export async function getXiaohongshuHotSearch(): Promise<StandardHotSearchItem[]> {
+export async function getXiaohongshuHotSearch(): Promise<
+  StandardHotSearchItem[]
+> {
   try {
     const response = await axios.get(
-      "http://odnwpcms.service-60s.6gbli6tg.rp32406v.com/v2/rednote",
+      "https://service-60s-202900-6-1388644494.sh.run.tcloudbase.com/v2/rednote",
       {
         timeout: 10000, // 10s timeout
       }
     );
 
-    if (response.data && response.data.code === 200 && Array.isArray(response.data.data)) {
+    if (
+      response.data &&
+      response.data.code === 200 &&
+      Array.isArray(response.data.data)
+    ) {
       return response.data.data.map((item: XiaohongshuItem) => ({
         rank: item.rank,
         title: item.title,
@@ -54,4 +60,3 @@ function mapIconType(wordType: string): string | null {
       return null;
   }
 }
-

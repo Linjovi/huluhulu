@@ -15,6 +15,7 @@ interface AllHotSearchResponse {
   data: {
     weibo: HotSearchItem[];
     douyin: HotSearchItem[];
+    xiaohongshu: HotSearchItem[];
     summary?: string;
     timestamp: string;
   };
@@ -24,6 +25,7 @@ interface AllHotSearchResponse {
 export const getAllHotSearch = async (): Promise<{
   weibo: HotSearchItem[];
   douyin: HotSearchItem[];
+  xiaohongshu: HotSearchItem[];
   summary?: string;
 }> => {
   try {
@@ -40,8 +42,9 @@ export const getAllHotSearch = async (): Promise<{
     }
 
     return {
-      weibo: result.data.weibo,
-      douyin: result.data.douyin,
+      weibo: result.data.weibo || [],
+      douyin: result.data.douyin || [],
+      xiaohongshu: result.data.xiaohongshu || [],
       summary: result.data.summary,
     };
   } catch (error) {
@@ -91,4 +94,3 @@ export const getDouyinHotSearch = async (): Promise<HotSearchItem[]> => {
     throw error;
   }
 };
-

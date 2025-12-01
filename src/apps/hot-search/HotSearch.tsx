@@ -254,9 +254,11 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
                       )}
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-gray-400">
-                        {item.hot ? `热度 ${item.hot}` : "置顶推荐"}
-                      </span>
+                      {(item.hot && item.hot !== "0") ? (
+                        <span className="text-xs text-gray-400">
+                          {`热度 ${item.hot}`}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </div>
