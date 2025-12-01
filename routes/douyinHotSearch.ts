@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Request, Response } from "express";
+import { getHotSearchSummary } from "../services/aiSummary";
 
 interface DouyinHotSearchItem {
   rank: number;
@@ -20,6 +21,15 @@ interface DouyinApiItem {
   active_time: string;
   active_time_at: number;
 }
+
+interface CacheData {
+  list: DouyinHotSearchItem[];
+  summary: string;
+  timestamp: number;
+}
+
+let cache: CacheData | null = null;
+const CACHE_DURATION = 180 * 1000; // 3 minutes
 
 /**
  * 爬取抖音热搜榜 (API 版本)
@@ -66,13 +76,45 @@ function getIconType(index: number): string | null {
  */
 export async function douyinHotSearchHandler(req: Request, res: Response) {
   try {
+    // Check cache
+    if (cache && Date.now() - cache.timestamp < CACHE_DURATION) {
+      return res.json({
+        code: 0,
+        message: "获取成功 (Cached)",
+        data: {
+          list: cache.list,
+          summary: cache.summary,
+          count: cache.list.length,
+          timestamp: new Date(cache.timestamp).toISOString(),
+        },
+      });
+    }
+
     const hotSearchList = await getDouyinHotSearch();
+    let summary = "";
+
+    // Generate summary
+    if (hotSearchList.length > 0) {
+      try {
+        summary = await getHotSearchSummary("抖音", hotSearchList);
+      } catch (err) {
+        console.error("生成抖音热搜总结失败:", err);
+      }
+    }
+
+    // Update cache
+    cache = {
+      list: hotSearchList,
+      summary,
+      timestamp: Date.now(),
+    };
 
     res.json({
       code: 0,
       message: "获取成功",
       data: {
         list: hotSearchList,
+        summary: summary,
         count: hotSearchList.length,
         timestamp: new Date().toISOString(),
       },

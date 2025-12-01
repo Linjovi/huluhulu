@@ -5,7 +5,7 @@ import morgan from "morgan";
 import { catJudgementHandler } from "./routes/catJudgement";
 import { weiboHotSearchHandler } from "./routes/weiboHotSearch";
 import { douyinHotSearchHandler } from "./routes/douyinHotSearch";
-import { allHotSearchHandler } from "./routes/allHotSearch";
+import { xiaohongshuHotSearchHandler } from "./routes/xiaohongshuHotSearch";
 
 const logger = morgan("tiny");
 
@@ -38,8 +38,9 @@ app.get("/api/weibo-hot-search", weiboHotSearchHandler);
 // 抖音热搜榜接口
 app.get("/api/douyin-hot-search", douyinHotSearchHandler);
 
-// 聚合热搜接口
-app.get("/api/all-hot-search", allHotSearchHandler);
+// 小红书热搜榜接口
+app.get("/api/xiaohongshu-hot-search", xiaohongshuHotSearchHandler);
+
 
 // React 应用路由处理（所有非 API 路由都返回 index.html）
 app.get("*", (req: Request, res: Response) => {

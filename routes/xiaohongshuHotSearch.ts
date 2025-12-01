@@ -1,4 +1,6 @@
 import axios from "axios";
+import { Request, Response } from "express";
+import { getHotSearchSummary } from "../services/aiSummary";
 
 interface XiaohongshuItem {
   rank: number;
@@ -16,6 +18,15 @@ interface StandardHotSearchItem {
   hot: string | null;
   iconType: string | null;
 }
+
+interface CacheData {
+  list: StandardHotSearchItem[];
+  summary: string;
+  timestamp: number;
+}
+
+let cache: CacheData | null = null;
+const CACHE_DURATION = 180 * 1000; // 3 minutes
 
 export async function getXiaohongshuHotSearch(): Promise<
   StandardHotSearchItem[]
@@ -58,5 +69,63 @@ function mapIconType(wordType: string): string | null {
     case "无":
     default:
       return null;
+  }
+}
+
+/**
+ * 小红书热搜榜接口路由处理
+ */
+export async function xiaohongshuHotSearchHandler(req: Request, res: Response) {
+  try {
+    // Check cache
+    if (cache && Date.now() - cache.timestamp < CACHE_DURATION) {
+      return res.json({
+        code: 0,
+        message: "获取成功 (Cached)",
+        data: {
+          list: cache.list,
+          summary: cache.summary,
+          count: cache.list.length,
+          timestamp: new Date(cache.timestamp).toISOString(),
+        },
+      });
+    }
+
+    const hotSearchList = await getXiaohongshuHotSearch();
+    let summary = "";
+
+    // Generate summary
+    if (hotSearchList.length > 0) {
+      try {
+        summary = await getHotSearchSummary("小红书", hotSearchList);
+      } catch (err) {
+        console.error("生成小红书热搜总结失败:", err);
+      }
+    }
+
+    // Update cache
+    cache = {
+      list: hotSearchList,
+      summary,
+      timestamp: Date.now(),
+    };
+
+    res.json({
+      code: 0,
+      message: "获取成功",
+      data: {
+        list: hotSearchList,
+        summary: summary,
+        count: hotSearchList.length,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch (error: any) {
+    console.error("小红书热搜榜接口错误:", error);
+
+    res.status(500).json({
+      code: 500,
+      message: error.message || "获取小红书热搜榜失败，请稍后再试",
+    });
   }
 }

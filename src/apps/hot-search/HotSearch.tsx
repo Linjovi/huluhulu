@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { GossipCatAvatar } from "../../common/components/Icons";
-import { getAllHotSearch } from "./api";
+import {
+  getWeiboHotSearch,
+  getDouyinHotSearch,
+  getXiaohongshuHotSearch,
+} from "./api";
 import { HotSearchItem } from "./types";
 
 interface HotSearchProps {
@@ -9,26 +13,78 @@ interface HotSearchProps {
 
 type Source = "weibo" | "douyin" | "xiaohongshu";
 
+interface SourceData {
+  list: HotSearchItem[];
+  summary?: string;
+}
+
 export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   const [source, setSource] = useState<Source>("weibo");
-  const [data, setData] = useState<{
-    weibo: HotSearchItem[];
-    douyin: HotSearchItem[];
-    xiaohongshu: HotSearchItem[];
-    summary?: string;
-  }>({ weibo: [], douyin: [], xiaohongshu: [] });
-  const [loading, setLoading] = useState(true);
+  const [weiboData, setWeiboData] = useState<SourceData | null>(null);
+  const [douyinData, setDouyinData] = useState<SourceData | null>(null);
+  const [xhsData, setXhsData] = useState<SourceData | null>(null);
+  
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const getCurrentData = () => {
+    switch (source) {
+      case "weibo":
+        return weiboData;
+      case "douyin":
+        return douyinData;
+      case "xiaohongshu":
+        return xhsData;
+      default:
+        return null;
+    }
+  };
+
+  const setCurrentData = (data: SourceData | null) => {
+    switch (source) {
+      case "weibo":
+        setWeiboData(data);
+        break;
+      case "douyin":
+        setDouyinData(data);
+        break;
+      case "xiaohongshu":
+        setXhsData(data);
+        break;
+    }
+  };
+
+  const fetchSourceData = async (targetSource: Source) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await getAllHotSearch();
-      setData(result);
-      // Cache data and current timestamp
-      localStorage.setItem("hotSearchData", JSON.stringify(result));
-      localStorage.setItem("hotSearchTime", Date.now().toString());
+      let result;
+      if (targetSource === "weibo") {
+        result = await getWeiboHotSearch();
+      } else if (targetSource === "douyin") {
+        result = await getDouyinHotSearch();
+      } else {
+        result = await getXiaohongshuHotSearch();
+      }
+
+      const dataToStore = {
+        list: result.list,
+        summary: result.summary,
+      };
+
+      if (targetSource === "weibo") setWeiboData(dataToStore);
+      else if (targetSource === "douyin") setDouyinData(dataToStore);
+      else setXhsData(dataToStore);
+
+      // Cache data
+      localStorage.setItem(
+        `hotSearchData_${targetSource}`,
+        JSON.stringify(dataToStore)
+      );
+      localStorage.setItem(
+        `hotSearchTime_${targetSource}`,
+        Date.now().toString()
+      );
     } catch (err) {
       setError("获取热搜失败，请稍后重试喵~");
     } finally {
@@ -37,43 +93,46 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   };
 
   useEffect(() => {
-    // Check localStorage first
-    const cachedData = localStorage.getItem("hotSearchData");
-    const cachedTime = localStorage.getItem("hotSearchTime");
+    // Check memory state first
+    const currentMemoryData = getCurrentData();
+    if (currentMemoryData) {
+      return; // Already loaded in memory
+    }
+
+    // Check localStorage
+    const cachedData = localStorage.getItem(`hotSearchData_${source}`);
+    const cachedTime = localStorage.getItem(`hotSearchTime_${source}`);
 
     if (cachedData && cachedTime) {
       const now = Date.now();
       // Cache for 1 hour (3600000 ms)
       if (now - parseInt(cachedTime) < 3600000) {
         try {
-          setData(JSON.parse(cachedData));
-          setLoading(false);
+          const parsedData = JSON.parse(cachedData);
+          setCurrentData(parsedData);
           return;
         } catch (e) {
           console.error("Failed to parse cached data", e);
         }
       }
     }
-    
-    fetchData();
-  }, []);
+
+    fetchSourceData(source);
+  }, [source]);
 
   const refreshData = () => {
-    localStorage.removeItem("hotSearchData");
-    localStorage.removeItem("hotSearchTime");
-    fetchData();
+    localStorage.removeItem(`hotSearchData_${source}`);
+    localStorage.removeItem(`hotSearchTime_${source}`);
+    fetchSourceData(source);
   };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [source]);
 
-  const list =
-    source === "weibo"
-      ? data.weibo
-      : source === "douyin"
-      ? data.douyin
-      : data.xiaohongshu;
+  const currentData = getCurrentData();
+  const list = currentData?.list || [];
+  const summary = currentData?.summary;
 
   const getRankColor = (rank: number | string | null) => {
     if (rank === "置顶") return "bg-red-500 text-white";
@@ -103,13 +162,6 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
     }
   };
 
-  const getThemeColor = () =>
-    source === "weibo"
-      ? "text-pink-500 bg-pink-50"
-      : source === "douyin"
-      ? "text-black bg-gray-50"
-      : "text-red-500 bg-red-50";
-
   return (
     <div className="min-h-[calc(100vh-80px)] bg-white pb-20">
       <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
@@ -122,19 +174,19 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
         </div>
 
         {/* AI Summary Card */}
-        {data.summary && (
+        {summary && (
           <div className="mx-4 mb-2 bg-gradient-to-br from-purple-50 to-white border border-purple-100 p-3 rounded-2xl shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-16 h-16 bg-purple-100 rounded-bl-full opacity-50"></div>
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-lg">🤖</span>
                 <h3 className="font-bold text-purple-900 text-sm">
-                  吃瓜喵的总结
+                  吃瓜喵的总结 ({source === "weibo" ? "微博" : source === "douyin" ? "抖音" : "小红书"})
                 </h3>
               </div>
               <div
                 className="text-xs text-gray-700 leading-relaxed bg-white/60 p-2.5 rounded-xl border border-purple-50/50"
-                dangerouslySetInnerHTML={{ __html: data.summary }}
+                dangerouslySetInnerHTML={{ __html: summary }}
               />
             </div>
           </div>
@@ -181,7 +233,7 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
       </div>
 
       <div className="p-4 space-y-4">
-        {loading ? (
+        {loading && !currentData ? (
           <div className="flex flex-col items-center justify-center py-12 animate-pulse">
             <div
               className={`w-12 h-12 border-4 rounded-full animate-spin mb-4 ${
@@ -194,11 +246,11 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
             ></div>
             <p className="text-gray-400 text-sm">正在搬运大瓜...</p>
           </div>
-        ) : error ? (
+        ) : error && !currentData ? (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">{error}</p>
             <button
-              onClick={fetchData}
+              onClick={() => fetchSourceData(source)}
               className={`px-6 py-2 rounded-full font-bold shadow-lg active:scale-95 transition-all text-white ${
                 source === "weibo"
                   ? "bg-pink-500 shadow-pink-200"

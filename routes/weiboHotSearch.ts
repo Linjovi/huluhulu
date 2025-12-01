@@ -1,5 +1,6 @@
 import puppeteer from "puppeteer";
 import { Request, Response } from "express";
+import { getHotSearchSummary } from "../services/aiSummary";
 
 interface HotSearchItem {
   rank: string | number | null;
@@ -8,6 +9,15 @@ interface HotSearchItem {
   hot: string | null;
   iconType: string | null;
 }
+
+interface CacheData {
+  list: HotSearchItem[];
+  summary: string;
+  timestamp: number;
+}
+
+let cache: CacheData | null = null;
+const CACHE_DURATION = 180 * 1000; // 3 minutes
 
 /**
  * 爬取微博热搜榜
@@ -173,13 +183,45 @@ export async function getWeiboHotSearch(): Promise<HotSearchItem[]> {
  */
 export async function weiboHotSearchHandler(req: Request, res: Response) {
   try {
+    // Check cache
+    if (cache && Date.now() - cache.timestamp < CACHE_DURATION) {
+      return res.json({
+        code: 0,
+        message: "获取成功 (Cached)",
+        data: {
+          list: cache.list,
+          summary: cache.summary,
+          count: cache.list.length,
+          timestamp: new Date(cache.timestamp).toISOString(),
+        },
+      });
+    }
+
     const hotSearchList = await getWeiboHotSearch();
+    let summary = "";
+
+    // Generate summary only if we have data
+    if (hotSearchList.length > 0) {
+      try {
+        summary = await getHotSearchSummary("微博", hotSearchList);
+      } catch (err) {
+        console.error("生成微博热搜总结失败:", err);
+      }
+    }
+
+    // Update cache
+    cache = {
+      list: hotSearchList,
+      summary,
+      timestamp: Date.now(),
+    };
 
     res.json({
       code: 0,
       message: "获取成功",
       data: {
         list: hotSearchList,
+        summary: summary,
         count: hotSearchList.length,
         timestamp: new Date().toISOString(),
       },
