@@ -19,7 +19,7 @@ interface SourceData {
 }
 
 export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
-  const [source, setSource] = useState<Source>("weibo");
+  const [source, setSource] = useState<Source>("douyin");
   const [weiboData, setWeiboData] = useState<SourceData | null>(null);
   const [douyinData, setDouyinData] = useState<SourceData | null>(null);
   const [xhsData, setXhsData] = useState<SourceData | null>(null);
@@ -194,18 +194,6 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
 
         <div className="flex px-4 pb-2 gap-4">
           <button
-            onClick={() => setSource("weibo")}
-            className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all relative overflow-hidden ${
-              source === "weibo"
-                ? "bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-200"
-                : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-            }`}
-          >
-            <div className="relative z-10 flex items-center justify-center gap-2">
-              <span className="text-lg">🔴</span> 微博
-            </div>
-          </button>
-          <button
             onClick={() => setSource("douyin")}
             className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all relative overflow-hidden ${
               source === "douyin"
@@ -227,6 +215,18 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
           >
             <div className="relative z-10 flex items-center justify-center gap-2">
               <span className="text-lg">📕</span> 小红书
+            </div>
+          </button>
+          <button
+            onClick={() => setSource("weibo")}
+            className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all relative overflow-hidden ${
+              source === "weibo"
+                ? "bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-200"
+                : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+            }`}
+          >
+            <div className="relative z-10 flex items-center justify-center gap-2">
+              <span className="text-lg">🔴</span> 微博
             </div>
           </button>
         </div>
