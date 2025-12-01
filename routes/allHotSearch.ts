@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { Request, Response } from "express";
 import { getWeiboHotSearch } from "./weiboHotSearch";
 import { getDouyinHotSearch } from "./douyinHotSearch";
+import { getXiaohongshuHotSearch } from "./xiaohongshuHotSearch";
 
 /**
  * 创建 DeepSeek 客户端
@@ -23,18 +24,23 @@ function createDeepSeekClient() {
  */
 async function getHotSearchSummary(
   weiboList: any[],
-  douyinList: any[]
+  douyinList: any[],
+  xiaohongshuList: any[]
 ): Promise<string> {
   const client = createDeepSeekClient();
   if (!client) return "";
 
   // 提取前10条热搜用于总结
   const weiboTop = weiboList
-    .slice(0, 15)
+    .slice(0, 10)
     .map((item, i) => `${i + 1}. ${item.title}`)
     .join("\n");
   const douyinTop = douyinList
-    .slice(0, 15)
+    .slice(0, 10)
+    .map((item, i) => `${i + 1}. ${item.title}`)
+    .join("\n");
+  const xiaohongshuTop = xiaohongshuList
+    .slice(0, 10)
     .map((item, i) => `${i + 1}. ${item.title}`)
     .join("\n");
 
@@ -42,7 +48,7 @@ async function getHotSearchSummary(
 Role: You are "Gossip Cat" (吃瓜喵), a cute cat who loves internet gossip and trending news.
 
 Task:
-Read the top trending topics from Weibo and Douyin below.
+Read the top trending topics from Weibo, Douyin, and Xiaohongshu below.
 Summarize the most interesting, discussed, or overlapping events.
 Your summary should be fun, slightly gossipy, and very cute.
 Use emojis appropriately.
@@ -52,6 +58,7 @@ Tone & Style:
 - Use "喵" (meow) or "捏" (ne) at the end of sentences.
 - Keep it concise (around 100-150 Chinese characters).
 - Address the reader as "铲屎官" (Shoveler).
+- **Highlight keywords (names, events, key terms) using HTML <b> tags. Do NOT use markdown bolding.**
 
 Data:
 [Weibo Hot Search]
@@ -59,6 +66,9 @@ ${weiboTop}
 
 [Douyin Hot Search]
 ${douyinTop}
+
+[Xiaohongshu Hot Search]
+${xiaohongshuTop}
 
 Output:
 Return ONLY the summary text in Chinese. No JSON, no markdown formatting.
@@ -93,14 +103,18 @@ Return ONLY the summary text in Chinese. No JSON, no markdown formatting.
  */
 export async function allHotSearchHandler(req: Request, res: Response) {
   try {
-    // 并行请求微博和抖音热搜
-    const [weiboList, douyinList] = await Promise.all([
+    // 并行请求微博、抖音和小红书热搜
+    const [weiboList, douyinList, xiaohongshuList] = await Promise.all([
       getWeiboHotSearch().catch((err) => {
         console.error("获取微博热搜失败:", err);
         return [];
       }),
       getDouyinHotSearch().catch((err) => {
         console.error("获取抖音热搜失败:", err);
+        return [];
+      }),
+      getXiaohongshuHotSearch().catch((err) => {
+        console.error("获取小红书热搜失败:", err);
         return [];
       }),
     ]);
@@ -111,8 +125,16 @@ export async function allHotSearchHandler(req: Request, res: Response) {
     // 这里为了演示简单，直接串行等待。
     let summary = "";
     try {
-      if (weiboList.length > 0 || douyinList.length > 0) {
-        summary = await getHotSearchSummary(weiboList, douyinList);
+      if (
+        weiboList.length > 0 ||
+        douyinList.length > 0 ||
+        xiaohongshuList.length > 0
+      ) {
+        summary = await getHotSearchSummary(
+          weiboList,
+          douyinList,
+          xiaohongshuList
+        );
       }
     } catch (err) {
       console.error("获取 AI 总结失败:", err);
@@ -124,6 +146,7 @@ export async function allHotSearchHandler(req: Request, res: Response) {
       data: {
         weibo: weiboList,
         douyin: douyinList,
+        xiaohongshu: xiaohongshuList,
         summary: summary,
         timestamp: new Date().toISOString(),
       },

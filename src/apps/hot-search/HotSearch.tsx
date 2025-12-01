@@ -7,15 +7,16 @@ interface HotSearchProps {
   onBack: () => void;
 }
 
-type Source = "weibo" | "douyin";
+type Source = "weibo" | "douyin" | "xiaohongshu";
 
 export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   const [source, setSource] = useState<Source>("weibo");
   const [data, setData] = useState<{
     weibo: HotSearchItem[];
     douyin: HotSearchItem[];
+    xiaohongshu: HotSearchItem[];
     summary?: string;
-  }>({ weibo: [], douyin: [] });
+  }>({ weibo: [], douyin: [], xiaohongshu: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,7 +68,12 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [source]);
 
-  const list = source === "weibo" ? data.weibo : data.douyin;
+  const list =
+    source === "weibo"
+      ? data.weibo
+      : source === "douyin"
+      ? data.douyin
+      : data.xiaohongshu;
 
   const getRankColor = (rank: number | string | null) => {
     if (rank === "置顶") return "bg-red-500 text-white";
@@ -98,7 +104,11 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   };
 
   const getThemeColor = () =>
-    source === "weibo" ? "text-pink-500 bg-pink-50" : "text-black bg-gray-50";
+    source === "weibo"
+      ? "text-pink-500 bg-pink-50"
+      : source === "douyin"
+      ? "text-black bg-gray-50"
+      : "text-red-500 bg-red-50";
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-white pb-20">
@@ -140,7 +150,7 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
             }`}
           >
             <div className="relative z-10 flex items-center justify-center gap-2">
-              <span className="text-lg">🔴</span> 微博热搜
+              <span className="text-lg">🔴</span> 微博
             </div>
           </button>
           <button
@@ -152,7 +162,19 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
             }`}
           >
             <div className="relative z-10 flex items-center justify-center gap-2">
-              <span className="text-lg">🎵</span> 抖音热榜
+              <span className="text-lg">🎵</span> 抖音
+            </div>
+          </button>
+          <button
+            onClick={() => setSource("xiaohongshu")}
+            className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all relative overflow-hidden ${
+              source === "xiaohongshu"
+                ? "bg-red-500 text-white shadow-lg shadow-red-200"
+                : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+            }`}
+          >
+            <div className="relative z-10 flex items-center justify-center gap-2">
+              <span className="text-lg">📕</span> 小红书
             </div>
           </button>
         </div>
@@ -165,7 +187,9 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
               className={`w-12 h-12 border-4 rounded-full animate-spin mb-4 ${
                 source === "weibo"
                   ? "border-pink-200 border-t-pink-500"
-                  : "border-gray-200 border-t-black"
+                  : source === "douyin"
+                  ? "border-gray-200 border-t-black"
+                  : "border-red-200 border-t-red-500"
               }`}
             ></div>
             <p className="text-gray-400 text-sm">正在搬运大瓜...</p>
@@ -178,7 +202,9 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
               className={`px-6 py-2 rounded-full font-bold shadow-lg active:scale-95 transition-all text-white ${
                 source === "weibo"
                   ? "bg-pink-500 shadow-pink-200"
-                  : "bg-black shadow-gray-200"
+                  : source === "douyin"
+                  ? "bg-black shadow-gray-200"
+                  : "bg-red-500 shadow-red-200"
               }`}
             >
               重试一下
@@ -246,7 +272,9 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
               className={`text-sm transition-colors flex items-center justify-center gap-1 mx-auto ${
                 source === "weibo"
                   ? "text-gray-400 hover:text-pink-500"
-                  : "text-gray-400 hover:text-black"
+                  : source === "douyin"
+                  ? "text-gray-400 hover:text-black"
+                  : "text-gray-400 hover:text-red-500"
               }`}
             >
               <svg
