@@ -25,6 +25,9 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
     try {
       const result = await getAllHotSearch();
       setData(result);
+      // Cache data and current timestamp
+      localStorage.setItem("hotSearchData", JSON.stringify(result));
+      localStorage.setItem("hotSearchTime", Date.now().toString());
     } catch (err) {
       setError("获取热搜失败，请稍后重试喵~");
     } finally {
@@ -33,8 +36,32 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   };
 
   useEffect(() => {
+    // Check localStorage first
+    const cachedData = localStorage.getItem("hotSearchData");
+    const cachedTime = localStorage.getItem("hotSearchTime");
+
+    if (cachedData && cachedTime) {
+      const now = Date.now();
+      // Cache for 1 hour (3600000 ms)
+      if (now - parseInt(cachedTime) < 3600000) {
+        try {
+          setData(JSON.parse(cachedData));
+          setLoading(false);
+          return;
+        } catch (e) {
+          console.error("Failed to parse cached data", e);
+        }
+      }
+    }
+    
     fetchData();
   }, []);
+
+  const refreshData = () => {
+    localStorage.removeItem("hotSearchData");
+    localStorage.removeItem("hotSearchTime");
+    fetchData();
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -83,6 +110,25 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
             <p className="text-xs text-gray-500">全网热瓜，一网打尽！</p>
           </div>
         </div>
+
+        {/* AI Summary Card */}
+        {data.summary && (
+          <div className="mx-4 mb-2 bg-gradient-to-br from-purple-50 to-white border border-purple-100 p-3 rounded-2xl shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-purple-100 rounded-bl-full opacity-50"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-lg">🤖</span>
+                <h3 className="font-bold text-purple-900 text-sm">
+                  吃瓜喵的总结
+                </h3>
+              </div>
+              <div
+                className="text-xs text-gray-700 leading-relaxed bg-white/60 p-2.5 rounded-xl border border-purple-50/50"
+                dangerouslySetInnerHTML={{ __html: data.summary }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex px-4 pb-2 gap-4">
           <button
@@ -140,22 +186,6 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
           </div>
         ) : (
           <div className="space-y-3 animate-slide-up">
-            {/* AI Summary Card */}
-            {data.summary && (
-              <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-100 p-4 rounded-2xl shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-purple-100 rounded-bl-full opacity-50"></div>
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">🤖</span>
-                    <h3 className="font-bold text-purple-900">吃瓜喵的总结</h3>
-                  </div>
-                  <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap bg-white/60 p-3 rounded-xl border border-purple-50/50">
-                    {data.summary}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {list.map((item, index) => (
               <a
                 key={index}
@@ -212,7 +242,7 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
         {!loading && !error && (
           <div className="mt-6 text-center">
             <button
-              onClick={fetchData}
+              onClick={refreshData}
               className={`text-sm transition-colors flex items-center justify-center gap-1 mx-auto ${
                 source === "weibo"
                   ? "text-gray-400 hover:text-pink-500"
