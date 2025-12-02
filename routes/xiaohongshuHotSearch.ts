@@ -1,6 +1,5 @@
 import axios from "axios";
 import { Request, Response } from "express";
-import { getHotSearchSummary } from "../services/aiSummary";
 
 interface XiaohongshuItem {
   rank: number;
@@ -93,15 +92,6 @@ export async function xiaohongshuHotSearchHandler(req: Request, res: Response) {
 
     const hotSearchList = await getXiaohongshuHotSearch();
     let summary = "";
-
-    // Generate summary
-    if (hotSearchList.length > 0) {
-      try {
-        summary = await getHotSearchSummary("小红书", hotSearchList);
-      } catch (err) {
-        console.error("生成小红书热搜总结失败:", err);
-      }
-    }
 
     // Update cache
     cache = {

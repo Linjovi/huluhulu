@@ -1,6 +1,5 @@
 import puppeteer from "puppeteer";
 import { Request, Response } from "express";
-import { getHotSearchSummary } from "../services/aiSummary";
 
 interface HotSearchItem {
   rank: string | number | null;
@@ -199,15 +198,6 @@ export async function weiboHotSearchHandler(req: Request, res: Response) {
 
     const hotSearchList = await getWeiboHotSearch();
     let summary = "";
-
-    // Generate summary only if we have data
-    if (hotSearchList.length > 0) {
-      try {
-        summary = await getHotSearchSummary("微博", hotSearchList);
-      } catch (err) {
-        console.error("生成微博热搜总结失败:", err);
-      }
-    }
 
     // Update cache
     cache = {

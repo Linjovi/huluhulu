@@ -1,6 +1,5 @@
 import axios from "axios";
 import { Request, Response } from "express";
-import { getHotSearchSummary } from "../services/aiSummary";
 
 interface DouyinHotSearchItem {
   rank: number;
@@ -92,15 +91,6 @@ export async function douyinHotSearchHandler(req: Request, res: Response) {
 
     const hotSearchList = await getDouyinHotSearch();
     let summary = "";
-
-    // Generate summary
-    if (hotSearchList.length > 0) {
-      try {
-        summary = await getHotSearchSummary("抖音", hotSearchList);
-      } catch (err) {
-        console.error("生成抖音热搜总结失败:", err);
-      }
-    }
 
     // Update cache
     cache = {

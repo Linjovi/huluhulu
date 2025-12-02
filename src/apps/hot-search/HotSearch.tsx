@@ -173,24 +173,6 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
           </div>
         </div>
 
-        {/* AI Summary Card */}
-        {summary && (
-          <div className="mx-4 mb-2 bg-gradient-to-br from-purple-50 to-white border border-purple-100 p-3 rounded-2xl shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-purple-100 rounded-bl-full opacity-50"></div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-lg">🤖</span>
-                <h3 className="font-bold text-purple-900 text-sm">
-                  吃瓜喵的总结 ({source === "weibo" ? "微博" : source === "douyin" ? "抖音" : "小红书"})
-                </h3>
-              </div>
-              <div
-                className="text-xs text-gray-700 leading-relaxed bg-white/60 p-2.5 rounded-xl border border-purple-50/50"
-                dangerouslySetInnerHTML={{ __html: summary }}
-              />
-            </div>
-          </div>
-        )}
 
         <div className="flex px-4 pb-2 gap-4">
           <button
