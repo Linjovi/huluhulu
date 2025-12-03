@@ -171,12 +171,9 @@ export const FortuneCatAvatar = ({
     className={`${className} relative overflow-hidden rounded-full border-4 border-purple-200 shadow-xl bg-purple-50`}
   >
     <img
-      src="https://robohash.org/FortuneTellerCat.png?set=set4&bgset=bg1"
+      src="https://youke1.picui.cn/s1/2025/12/03/692ff0a6164b5.png"
       alt="Fortune Cat"
       className="w-full h-full object-cover transform scale-110"
     />
-    <div className="absolute bottom-0 inset-x-0 bg-purple-600/80 text-white text-[10px] text-center py-1 backdrop-blur-sm font-bold">
-      神秘の占卜喵
-    </div>
   </div>
 );

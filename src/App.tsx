@@ -51,8 +51,8 @@ const App: React.FC = () => {
   const getTitle = () => {
     if (appState === AppState.HOME) return "喵星球";
     if (appState === AppState.WEIBO_HOT_SEARCH) return "吃瓜喵";
-    if (appState === AppState.ANSWER_BOOK) return "答案之书";
-    return "猫猫法官";
+    if (appState === AppState.ANSWER_BOOK) return "占卜喵";
+    return "法官喵";
   };
 
   const getTheme = () => {
@@ -65,10 +65,10 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto min-h-screen bg-[#f9fafb] shadow-2xl relative">
         {appState !== AppState.HOME && (
-          <NavBar 
-            onBack={handleBack} 
-            title={getTitle()} 
-            showBack={true} 
+          <NavBar
+            onBack={handleBack}
+            title={getTitle()}
+            showBack={true}
             theme={getTheme()}
           />
         )}

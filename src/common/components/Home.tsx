@@ -87,7 +87,7 @@ export const Home: React.FC<HomeProps> = ({
             backgroundImage:
               "url('https://youke1.picui.cn/s1/2025/12/03/692fa5ac28f87.png')",
             backgroundSize: "70%",
-            backgroundPosition: "120% bottom",
+            backgroundPosition: "140% bottom",
             backgroundRepeat: "no-repeat",
           }}
           className="w-full bg-white p-4 rounded-3xl shadow-lg shadow-gray-100 border border-white flex items-center gap-4 active:scale-95 transition-all group relative overflow-hidden"
@@ -130,6 +130,13 @@ export const Home: React.FC<HomeProps> = ({
 
         {/* Answer Book App */}
         <button
+          style={{
+            backgroundImage:
+              "url('https://youke1.picui.cn/s1/2025/12/03/692ff02f94dd5.png')",
+            backgroundSize: "70%",
+            backgroundPosition: "120% bottom",
+            backgroundRepeat: "no-repeat",
+          }}
           onClick={onSelectAnswerBook}
           className="w-full bg-white p-4 rounded-3xl shadow-lg shadow-gray-100 border border-white flex items-center gap-4 active:scale-95 transition-all group relative overflow-hidden"
         >
@@ -141,7 +148,7 @@ export const Home: React.FC<HomeProps> = ({
           </div>
 
           <div className="flex-1 text-left z-10">
-            <h3 className="font-bold text-gray-800 text-lg">喵喵答案之书</h3>
+            <h3 className="font-bold text-gray-800 text-lg">神秘の占卜喵</h3>
             <p className="text-xs text-gray-500 mt-1 line-clamp-1">
               遇事不决？问问神奇猫猫！
             </p>
