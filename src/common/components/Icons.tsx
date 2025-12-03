@@ -10,13 +10,11 @@ export const CatJudgeAvatar = ({
     className={`${className} relative overflow-hidden rounded-full border-4 border-orange-200 shadow-xl bg-white`}
   >
     <img
-      src="https://images.unsplash.com/photo-1592194996308-7b43878e84a6?q=80&w=1000&auto=format&fit=crop"
+      src="https://youke1.picui.cn/s1/2025/12/03/692faaa15bad9.png"
       alt="Anime Cat Judge"
       className="w-full h-full object-cover transform scale-110"
     />
-    <div className="absolute bottom-0 inset-x-0 bg-orange-500/80 text-white text-[10px] text-center py-1 backdrop-blur-sm font-bold">
-      公正の喵法官
-    </div>
+
   </div>
 );
 
@@ -29,13 +27,10 @@ export const GossipCatAvatar = ({
     className={`${className} relative overflow-hidden rounded-full border-4 border-pink-200 shadow-xl bg-white`}
   >
     <img
-      src="https://robohash.org/TravellerCatGuide.png?set=set4&bgset=bg1"
+      src="https://youke1.picui.cn/s1/2025/12/03/692fa6396f905.png"
       alt="Gossip Cat"
       className="w-full h-full object-cover"
     />
-    <div className="absolute bottom-0 inset-x-0 bg-pink-500/80 text-white text-[10px] text-center py-1 backdrop-blur-sm font-bold">
-      吃瓜の喵
-    </div>
   </div>
 );
 

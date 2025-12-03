@@ -82,3 +82,31 @@ export const getXiaohongshuHotSearch = async (): Promise<{
     throw error;
   }
 };
+
+export interface SummaryData {
+  summary: string;
+  mood: string;
+  moodScore: number;
+  keywords: Array<{ name: string; weight: number }>;
+}
+
+export const getHotSearchSummary = async (): Promise<SummaryData> => {
+  try {
+    const response = await fetch("/api/hot-search-summary");
+
+    if (!response.ok) {
+      throw new Error("获取热搜总结失败");
+    }
+
+    const result = await response.json();
+
+    if (result.code !== 0) {
+      throw new Error(result.message || "获取热搜总结返回错误");
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error("Error fetching hot search summary:", error);
+    throw error;
+  }
+};

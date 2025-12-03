@@ -10,15 +10,18 @@ interface DouyinHotSearchItem {
   originalData?: any;
 }
 
-interface DouyinApiItem {
-  title: string;
-  hot_value: number;
-  cover: string;
-  link: string;
-  event_time: string;
-  event_time_at: number;
-  active_time: string;
-  active_time_at: number;
+interface DouyinRawResponse {
+  data: {
+    word_list?: Array<{
+      word: string;
+      hot_value: number;
+      word_cover?: {
+        url_list: string[];
+      };
+      event_time: number;
+    }>;
+    active_time?: string;
+  };
 }
 
 interface CacheData {
@@ -35,8 +38,8 @@ const CACHE_DURATION = 180 * 1000; // 3 minutes
  */
 export async function getDouyinHotSearch(): Promise<DouyinHotSearchItem[]> {
   try {
-    const response = await axios.get(
-      "https://service-60s-202900-6-1388644494.sh.run.tcloudbase.com/v2/douyin",
+    const response = await axios.get<DouyinRawResponse>(
+      "https://aweme-lq.snssdk.com/aweme/v1/hot/search/list/?aid=1128&version_code=880",
       {
         timeout: 10000,
       }
@@ -44,16 +47,19 @@ export async function getDouyinHotSearch(): Promise<DouyinHotSearchItem[]> {
 
     if (
       response.data &&
-      response.data.code === 200 &&
-      Array.isArray(response.data.data)
+      response.data.data &&
+      Array.isArray(response.data.data.word_list)
     ) {
-      return response.data.data.map((item: DouyinApiItem, index: number) => ({
+      return response.data.data.word_list.map((item, index) => ({
         rank: index + 1,
-        title: item.title,
+        title: item.word,
         hot: (item.hot_value / 10000).toFixed(1) + "万", // Convert to "万" format
-        link: item.link,
+        link: `https://www.douyin.com/search/${encodeURIComponent(item.word)}`,
         iconType: getIconType(index),
-        originalData: item,
+        originalData: {
+          ...item,
+          cover: item.word_cover?.url_list[0],
+        },
       }));
     }
 

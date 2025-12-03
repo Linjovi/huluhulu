@@ -7,7 +7,7 @@
     "build": "webpack --mode production",
     "dev": "webpack serve --mode development",
     "dev:watch": "webpack --mode development --watch",
-    "start": "npm run build && ts-node index.ts"
+    "start": "npm run build && DEEPSEEK_API_KEY=sk-6eb06a89d8114682a6f7f37d891be972 ts-node index.ts"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -19,7 +19,8 @@
     "openai": "^4.20.0",
     "puppeteer": "^24.31.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "swiper": "^12.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",

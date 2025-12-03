@@ -6,7 +6,10 @@ interface HomeProps {
   onSelectGossip: () => void;
 }
 
-export const Home: React.FC<HomeProps> = ({ onSelectJudge, onSelectGossip }) => {
+export const Home: React.FC<HomeProps> = ({
+  onSelectJudge,
+  onSelectGossip,
+}) => {
   return (
     <div className="p-4 space-y-6 pt-8 pb-20 animate-fade-in">
       <div className="px-2">
@@ -17,6 +20,13 @@ export const Home: React.FC<HomeProps> = ({ onSelectJudge, onSelectGossip }) => 
       <div className="space-y-4">
         {/* Cat Judge App */}
         <button
+          style={{
+            backgroundImage:
+              "url('https://youke1.picui.cn/s1/2025/12/03/692faa7489134.png')",
+            backgroundSize: "70%",
+            backgroundPosition: "140% bottom",
+            backgroundRepeat: "no-repeat",
+          }}
           onClick={onSelectJudge}
           className="w-full bg-white p-4 rounded-3xl shadow-lg shadow-gray-100 border border-white flex items-center gap-4 active:scale-95 transition-all group relative overflow-hidden"
         >
@@ -30,7 +40,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectJudge, onSelectGossip }) => 
           <div className="flex-1 text-left z-10">
             <h3 className="font-bold text-gray-800 text-lg">猫猫法官</h3>
             <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-              情侣吵架？让本喵法官来评评理！
+              吵架了？让本法官来评评理！
             </p>
             <div className="mt-2 flex gap-2">
               <span className="bg-orange-50 text-orange-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-100">
@@ -62,6 +72,13 @@ export const Home: React.FC<HomeProps> = ({ onSelectJudge, onSelectGossip }) => 
         {/* Gossip Cat App */}
         <button
           onClick={onSelectGossip}
+          style={{
+            backgroundImage:
+              "url('https://youke1.picui.cn/s1/2025/12/03/692fa5ac28f87.png')",
+            backgroundSize: "70%",
+            backgroundPosition: "120% bottom",
+            backgroundRepeat: "no-repeat",
+          }}
           className="w-full bg-white p-4 rounded-3xl shadow-lg shadow-gray-100 border border-white flex items-center gap-4 active:scale-95 transition-all group relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-pink-100 to-transparent rounded-bl-full opacity-50"></div>

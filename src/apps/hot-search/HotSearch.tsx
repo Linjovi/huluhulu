@@ -1,11 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { GossipCatAvatar } from "../../common/components/Icons";
 import {
   getWeiboHotSearch,
   getDouyinHotSearch,
   getXiaohongshuHotSearch,
+  getHotSearchSummary,
+  SummaryData,
 } from "./api";
 import { HotSearchItem } from "./types";
+import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
+import "swiper/css";
 
 interface HotSearchProps {
   onBack: () => void;
@@ -23,12 +28,25 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   const [weiboData, setWeiboData] = useState<SourceData | null>(null);
   const [douyinData, setDouyinData] = useState<SourceData | null>(null);
   const [xhsData, setXhsData] = useState<SourceData | null>(null);
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const getCurrentData = () => {
-    switch (source) {
+  const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  const [loading, setLoading] = useState<Record<Source, boolean>>({
+    weibo: false,
+    douyin: false,
+    xiaohongshu: false,
+  });
+  const [error, setError] = useState<Record<Source, string | null>>({
+    weibo: null,
+    douyin: null,
+    xiaohongshu: null,
+  });
+
+  const swiperRef = useRef<SwiperType | null>(null);
+
+  const getCurrentData = (targetSource: Source) => {
+    switch (targetSource) {
       case "weibo":
         return weiboData;
       case "douyin":
@@ -40,8 +58,8 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
     }
   };
 
-  const setCurrentData = (data: SourceData | null) => {
-    switch (source) {
+  const setCurrentData = (targetSource: Source, data: SourceData | null) => {
+    switch (targetSource) {
       case "weibo":
         setWeiboData(data);
         break;
@@ -55,8 +73,9 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   };
 
   const fetchSourceData = async (targetSource: Source) => {
-    setLoading(true);
-    setError(null);
+    setLoading((prev) => ({ ...prev, [targetSource]: true }));
+    setError((prev) => ({ ...prev, [targetSource]: null }));
+
     try {
       let result;
       if (targetSource === "weibo") {
@@ -72,9 +91,7 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
         summary: result.summary,
       };
 
-      if (targetSource === "weibo") setWeiboData(dataToStore);
-      else if (targetSource === "douyin") setDouyinData(dataToStore);
-      else setXhsData(dataToStore);
+      setCurrentData(targetSource, dataToStore);
 
       // Cache data
       localStorage.setItem(
@@ -86,30 +103,58 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
         Date.now().toString()
       );
     } catch (err) {
-      setError("获取热搜失败，请稍后重试喵~");
+      setError((prev) => ({
+        ...prev,
+        [targetSource]: "获取热搜失败，请稍后重试喵~",
+      }));
     } finally {
-      setLoading(false);
+      setLoading((prev) => ({ ...prev, [targetSource]: false }));
     }
   };
 
-  useEffect(() => {
-    // Check memory state first
-    const currentMemoryData = getCurrentData();
-    if (currentMemoryData) {
-      return; // Already loaded in memory
+  const fetchSummary = async () => {
+    // Check cache first
+    const cachedSummary = localStorage.getItem("hotSearchSummary");
+    const cachedTime = localStorage.getItem("hotSearchSummaryTime");
+    if (cachedSummary && cachedTime) {
+      if (Date.now() - parseInt(cachedTime) < 60 * 60 * 1000) {
+        try {
+          setSummaryData(JSON.parse(cachedSummary));
+          return;
+        } catch (e) {
+          console.error("Failed to parse summary cache", e);
+        }
+      }
     }
 
-    // Check localStorage
-    const cachedData = localStorage.getItem(`hotSearchData_${source}`);
-    const cachedTime = localStorage.getItem(`hotSearchTime_${source}`);
+    setSummaryLoading(true);
+    try {
+      const data = await getHotSearchSummary();
+      setSummaryData(data);
+      localStorage.setItem("hotSearchSummary", JSON.stringify(data));
+      localStorage.setItem("hotSearchSummaryTime", Date.now().toString());
+    } catch (err) {
+      console.error("Failed to fetch summary", err);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const loadDataIfNeeded = (targetSource: Source) => {
+    const currentMemoryData = getCurrentData(targetSource);
+    if (currentMemoryData) {
+      return;
+    }
+
+    const cachedData = localStorage.getItem(`hotSearchData_${targetSource}`);
+    const cachedTime = localStorage.getItem(`hotSearchTime_${targetSource}`);
 
     if (cachedData && cachedTime) {
       const now = Date.now();
-      // Cache for 1 hour (3600000 ms)
       if (now - parseInt(cachedTime) < 3600000) {
         try {
           const parsedData = JSON.parse(cachedData);
-          setCurrentData(parsedData);
+          setCurrentData(targetSource, parsedData);
           return;
         } catch (e) {
           console.error("Failed to parse cached data", e);
@@ -117,22 +162,32 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
       }
     }
 
-    fetchSourceData(source);
-  }, [source]);
+    fetchSourceData(targetSource);
+  };
+
+  useEffect(() => {
+    // Prefetch all sources on mount if needed
+    loadDataIfNeeded("douyin");
+    loadDataIfNeeded("xiaohongshu");
+    loadDataIfNeeded("weibo");
+    fetchSummary();
+  }, []);
+
+  const handleTabChange = (newSource: Source) => {
+    setSource(newSource);
+    if (swiperRef.current) {
+      const index =
+        newSource === "douyin" ? 0 : newSource === "xiaohongshu" ? 1 : 2;
+      swiperRef.current.slideTo(index);
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const refreshData = () => {
     localStorage.removeItem(`hotSearchData_${source}`);
     localStorage.removeItem(`hotSearchTime_${source}`);
     fetchSourceData(source);
   };
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [source]);
-
-  const currentData = getCurrentData();
-  const list = currentData?.list || [];
-  const summary = currentData?.summary;
 
   const getRankColor = (rank: number | string | null) => {
     if (rank === "置顶") return "bg-red-500 text-white";
@@ -162,153 +217,168 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
     }
   };
 
-  return (
-    <div className="min-h-[calc(100vh-80px)] bg-white pb-20">
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="p-4 pb-2 flex items-center gap-4">
-          <GossipCatAvatar className="w-12 h-12 shrink-0" />
+  const renderSummarySection = () => {
+    if (summaryLoading) {
+      return (
+        <div className="mx-4 mt-4 p-4 bg-white/40 backdrop-blur-md rounded-2xl border border-white/50 animate-pulse">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-white/50 rounded-full"></div>
+            <div className="h-4 bg-white/50 rounded w-32"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 bg-white/50 rounded w-full"></div>
+            <div className="h-3 bg-white/50 rounded w-2/3"></div>
+          </div>
+        </div>
+      );
+    }
+
+    if (!summaryData) return null;
+
+    return (
+      <div className="mx-4 mt-4 p-4 bg-white/60 backdrop-blur-md rounded-2xl border border-white/60 shadow-[0_8px_32px_rgba(31,38,135,0.07)]">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="shrink-0">
+            <GossipCatAvatar className="w-12 h-12" />
+          </div>
           <div>
-            <h2 className="text-lg font-black text-gray-800">吃瓜喵</h2>
-            <p className="text-xs text-gray-500">全网热瓜，一网打尽！</p>
+            <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2 pt-1">
+              猫猫日报
+              <span className="text-xs font-normal px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full">
+                {summaryData.mood} (指数: {summaryData.moodScore})
+              </span>
+            </h3>
+            <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+              {summaryData.summary}
+            </p>
           </div>
         </div>
 
-
-        <div className="flex px-4 pb-2 gap-4">
-          <button
-            onClick={() => setSource("douyin")}
-            className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all relative overflow-hidden ${
-              source === "douyin"
-                ? "bg-black text-white shadow-lg shadow-gray-200"
-                : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-            }`}
-          >
-            <div className="relative z-10 flex items-center justify-center gap-2">
-              <span className="text-lg">🎵</span> 抖音
-            </div>
-          </button>
-          <button
-            onClick={() => setSource("xiaohongshu")}
-            className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all relative overflow-hidden ${
-              source === "xiaohongshu"
-                ? "bg-red-500 text-white shadow-lg shadow-red-200"
-                : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-            }`}
-          >
-            <div className="relative z-10 flex items-center justify-center gap-2">
-              <span className="text-lg">📕</span> 小红书
-            </div>
-          </button>
-          <button
-            onClick={() => setSource("weibo")}
-            className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all relative overflow-hidden ${
-              source === "weibo"
-                ? "bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-200"
-                : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-            }`}
-          >
-            <div className="relative z-10 flex items-center justify-center gap-2">
-              <span className="text-lg">🔴</span> 微博
-            </div>
-          </button>
+        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-black/5">
+          {summaryData.keywords.map((kw, idx) => (
+            <span
+              key={idx}
+              className="px-2 py-1 rounded-lg text-xs font-medium bg-white/50 border border-white/60 text-gray-600"
+              style={{
+                fontSize: `${Math.max(
+                  11,
+                  Math.min(16, 11 + kw.weight * 0.5)
+                )}px`,
+              }}
+            >
+              {kw.name}
+            </span>
+          ))}
         </div>
       </div>
+    );
+  };
 
-      <div className="p-4 space-y-4">
-        {loading && !currentData ? (
-          <div className="flex flex-col items-center justify-center py-12 animate-pulse">
-            <div
-              className={`w-12 h-12 border-4 rounded-full animate-spin mb-4 ${
-                source === "weibo"
-                  ? "border-pink-200 border-t-pink-500"
-                  : source === "douyin"
-                  ? "border-gray-200 border-t-black"
-                  : "border-red-200 border-t-red-500"
-              }`}
-            ></div>
-            <p className="text-gray-400 text-sm">正在搬运大瓜...</p>
-          </div>
-        ) : error && !currentData ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 mb-4">{error}</p>
-            <button
-              onClick={() => fetchSourceData(source)}
-              className={`px-6 py-2 rounded-full font-bold shadow-lg active:scale-95 transition-all text-white ${
-                source === "weibo"
-                  ? "bg-pink-500 shadow-pink-200"
-                  : source === "douyin"
-                  ? "bg-black shadow-gray-200"
-                  : "bg-red-500 shadow-red-200"
-              }`}
-            >
-              重试一下
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3 animate-slide-up">
-            {list.map((item, index) => (
-              <a
-                key={index}
-                href={item.link || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block bg-white p-4 rounded-2xl shadow-sm border border-gray-100 active:scale-[0.98] transition-transform relative overflow-hidden group"
+  const renderList = (targetSource: Source) => {
+    const data = getCurrentData(targetSource);
+    const isLoading = loading[targetSource];
+    const isError = error[targetSource];
+
+    if (isLoading && !data) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 animate-pulse">
+          <div
+            className={`w-10 h-10 border-3 rounded-full animate-spin mb-3 ${
+              targetSource === "weibo"
+                ? "border-pink-200 border-t-pink-500"
+                : targetSource === "douyin"
+                ? "border-gray-200 border-t-black"
+                : "border-red-200 border-t-red-500"
+            }`}
+          ></div>
+          <p className="text-gray-400 text-xs font-medium">正在搬运大瓜...</p>
+        </div>
+      );
+    }
+
+    if (isError && !data) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4 text-sm">{isError}</p>
+          <button
+            onClick={() => fetchSourceData(targetSource)}
+            className={`px-6 py-2 rounded-full font-bold shadow-sm active:scale-95 transition-all text-white text-sm ${
+              targetSource === "weibo"
+                ? "bg-pink-500"
+                : targetSource === "douyin"
+                ? "bg-black"
+                : "bg-red-500"
+            }`}
+          >
+            重试一下
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2 animate-slide-up p-4 pt-0 pb-20">
+        {data?.list.map((item, index) => (
+          <a
+            key={index}
+            href={item.link || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block bg-white px-4 py-3 rounded-xl shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] border border-gray-100 active:scale-[0.99] transition-all relative overflow-hidden group hover:shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-6 h-6 flex items-center justify-center rounded text-xs font-black shrink-0 ${getRankColor(
+                  item.rank
+                )}`}
               >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold shrink-0 ${getRankColor(
-                      item.rank
+                {item.rank}
+              </div>
+
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                <h3 className="font-medium text-gray-800 truncate text-[15px] group-hover:text-pink-600 transition-colors">
+                  {item.title}
+                </h3>
+                {item.iconType && (
+                  <span
+                    className={`text-[10px] font-bold shrink-0 px-1 py-0.5 rounded border border-current leading-none ${getIconColor(
+                      item.iconType
                     )}`}
                   >
-                    {item.rank}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-800 line-clamp-2 leading-snug group-hover:text-pink-600 transition-colors">
-                        {item.title}
-                      </h3>
-                      {item.iconType && (
-                        <span
-                          className={`text-xs font-bold shrink-0 px-1 rounded border border-current ${getIconColor(
-                            item.iconType
-                          )}`}
-                        >
-                          {item.iconType === "hot"
-                            ? "热"
-                            : item.iconType === "new"
-                            ? "新"
-                            : item.iconType === "boil"
-                            ? "沸"
-                            : item.iconType === "first"
-                            ? "首发"
-                            : item.iconType === "exclusive"
-                            ? "独家"
-                            : item.iconType}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      {(item.hot && item.hot !== "0") ? (
-                        <span className="text-xs text-gray-400">
-                          {`热度 ${item.hot}`}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
+                    {item.iconType === "hot"
+                      ? "热"
+                      : item.iconType === "new"
+                      ? "新"
+                      : item.iconType === "boil"
+                      ? "沸"
+                      : item.iconType === "first"
+                      ? "首发"
+                      : item.iconType === "exclusive"
+                      ? "独家"
+                      : item.iconType === "rumor"
+                      ? "辟谣"
+                      : item.iconType}
+                  </span>
+                )}
+              </div>
 
-        {!loading && !error && (
+              {item.hot && item.hot !== "0" && (
+                <div className="text-xs text-gray-400 font-mono shrink-0 tabular-nums opacity-80">
+                  {item.hot}
+                </div>
+              )}
+            </div>
+          </a>
+        ))}
+
+        {!isLoading && !isError && (
           <div className="mt-6 text-center">
             <button
-              onClick={refreshData}
+              onClick={() => refreshData()}
               className={`text-sm transition-colors flex items-center justify-center gap-1 mx-auto ${
-                source === "weibo"
+                targetSource === "weibo"
                   ? "text-gray-400 hover:text-pink-500"
-                  : source === "douyin"
+                  : targetSource === "douyin"
                   ? "text-gray-400 hover:text-black"
                   : "text-gray-400 hover:text-red-500"
               }`}
@@ -330,6 +400,86 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
             </button>
           </div>
         )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="h-[calc(100vh-80px)] bg-white flex flex-col relative">
+      <div className="absolute top-0 left-0 w-full h-[280px] bg-gradient-to-b from-orange-100 via-pink-50 to-transparent pointer-events-none z-0" />
+      <div className="sticky top-0 z-20 bg-white/0 backdrop-blur-sm flex-shrink-0">
+        {/* Header Removed */}
+
+        {renderSummarySection()}
+
+        <div className="px-4 pb-2 mt-4">
+          <div className="flex p-1 bg-gray-100/80 rounded-xl backdrop-blur-sm shadow-inner">
+            <button
+              onClick={() => handleTabChange("douyin")}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
+                source === "douyin"
+                  ? "bg-white text-black shadow-sm scale-[1.02]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-base">🎵</span> 抖音
+              </div>
+            </button>
+            <button
+              onClick={() => handleTabChange("xiaohongshu")}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
+                source === "xiaohongshu"
+                  ? "bg-white text-red-500 shadow-sm scale-[1.02]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-base">📕</span> 小红书
+              </div>
+            </button>
+            <button
+              onClick={() => handleTabChange("weibo")}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
+                source === "weibo"
+                  ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-base">🔴</span> 微博
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0">
+        <Swiper
+          spaceBetween={0}
+          slidesPerView={1}
+          onSwiper={(swiper) => {
+            swiperRef.current = swiper;
+          }}
+          onSlideChange={(swiper) => {
+            const index = swiper.activeIndex;
+            const newSource =
+              index === 0 ? "douyin" : index === 1 ? "xiaohongshu" : "weibo";
+            setSource(newSource);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="h-full"
+        >
+          <SwiperSlide className="h-full overflow-y-auto no-scrollbar">
+            {renderList("douyin")}
+          </SwiperSlide>
+          <SwiperSlide className="h-full overflow-y-auto no-scrollbar">
+            {renderList("xiaohongshu")}
+          </SwiperSlide>
+          <SwiperSlide className="h-full overflow-y-auto no-scrollbar">
+            {renderList("weibo")}
+          </SwiperSlide>
+        </Swiper>
       </div>
     </div>
   );
