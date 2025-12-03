@@ -14,7 +14,6 @@ export const CatJudgeAvatar = ({
       alt="Anime Cat Judge"
       className="w-full h-full object-cover transform scale-110"
     />
-
   </div>
 );
 

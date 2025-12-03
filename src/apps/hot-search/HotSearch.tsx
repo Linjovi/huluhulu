@@ -259,12 +259,12 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
             <span
               key={idx}
               className="px-2 py-1 rounded-lg text-xs font-medium bg-white/50 border border-white/60 text-gray-600"
-              style={{
-                fontSize: `${Math.max(
-                  11,
-                  Math.min(16, 11 + kw.weight * 0.5)
-                )}px`,
-              }}
+              // style={{
+              //   fontSize: `${Math.max(
+              //     11,
+              //     Math.min(16, 11 + kw.weight * 0.5)
+              //   )}px`,
+              // }}
             >
               {kw.name}
             </span>

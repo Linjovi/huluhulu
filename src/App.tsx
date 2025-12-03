@@ -52,7 +52,7 @@ const App: React.FC = () => {
   return (
     // Mobile-first container constraint
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-md mx-auto min-h-screen bg-[#f9fafb] shadow-2xl relative">
+      <div className="mx-auto min-h-screen bg-[#f9fafb] shadow-2xl relative">
         <NavBar
           onBack={handleBack}
           title={getTitle()}

@@ -77,7 +77,7 @@ Task:
 1. **Summary**: Write a short, witty, "cat-style" daily summary (max 150 chars) of what's happening. Use cat puns (喵, 捏, 爪) and emojis. Be funny and engaging.
 2. **Mood Analysis**: Analyze the overall internet vibe (e.g., "Eating Melon", "Angry", "Touching", "Funny").
 3. **Mood Score**: 0 (Very Negative) to 100 (Very Positive/Exciting).
-4. **Keywords**: Extract 10-15 popular keywords/entities from the titles for a word cloud. Assign a weight (1-10) based on frequency/importance.
+4. **Keywords**: Extract 8-12 popular keywords/entities from the titles for a word cloud. Assign a weight (1-10) based on frequency/importance.
 
 Response Format (JSON ONLY):
 {
