@@ -30,6 +30,7 @@ export const JudgeForm: React.FC<JudgeFormProps> = ({ onSubmit }) => {
   return (
     <div className="p-4 space-y-6 pb-20">
       {/* Header Card */}
+      <div style={{ height: "3rem" }}></div>
       <div className="bg-white rounded-3xl p-6 flex flex-col items-center shadow-lg border-2 border-orange-100 mt-4 relative overflow-visible">
         <div className="-mt-16 mb-2">
           <CatJudgeAvatar className="w-28 h-28 drop-shadow-xl" />
@@ -44,7 +45,7 @@ export const JudgeForm: React.FC<JudgeFormProps> = ({ onSubmit }) => {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Cause Section (Required) */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-orange-50">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-orange-50">
           <label className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-3">
             <span className="text-lg">📜</span>
             案发经过 (必填)

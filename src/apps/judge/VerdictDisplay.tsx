@@ -33,7 +33,7 @@ export const VerdictDisplay: React.FC<VerdictDisplayProps> = ({
   };
 
   return (
-    <div className="p-4 space-y-6 pb-20 animate-fade-in">
+    <div className="p-4 pt-24 space-y-6 pb-20 animate-fade-in">
       {/* Verdict Header */}
       <div className="flex flex-col items-center mt-6">
         <div className="relative">

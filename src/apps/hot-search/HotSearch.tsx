@@ -405,9 +405,9 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="h-[calc(100vh-80px)] bg-white flex flex-col relative">
+    <div className="h-screen bg-white flex flex-col relative">
       <div className="absolute top-0 left-0 w-full h-[280px] bg-gradient-to-b from-orange-100 via-pink-50 to-transparent pointer-events-none z-0" />
-      <div className="sticky top-0 z-20 bg-white/0 backdrop-blur-sm flex-shrink-0">
+      <div className="sticky top-0 z-20 bg-white/0 backdrop-blur-sm flex-shrink-0 pt-12">
         {/* Header Removed */}
 
         {renderSummarySection()}

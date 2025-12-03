@@ -5,6 +5,7 @@ import { VerdictDisplay } from "./apps/judge/VerdictDisplay";
 import { LoadingScreen } from "./common/components/LoadingScreen";
 import { Home } from "./common/components/Home";
 import { HotSearch } from "./apps/hot-search/HotSearch";
+import { AnswerBook } from "./apps/answer/index";
 import { AppState } from "./common/types";
 import { ConflictData, VerdictResult } from "./apps/judge/types";
 import { getCatJudgement } from "./apps/judge/api";
@@ -38,32 +39,46 @@ const App: React.FC = () => {
   const handleBack = () => {
     if (appState === AppState.RESULT) {
       handleReset();
-    } else if (appState === AppState.INPUT || appState === AppState.WEIBO_HOT_SEARCH) {
+    } else if (
+      appState === AppState.INPUT ||
+      appState === AppState.WEIBO_HOT_SEARCH ||
+      appState === AppState.ANSWER_BOOK
+    ) {
       setAppState(AppState.HOME);
     }
   };
 
   const getTitle = () => {
-    if (appState === AppState.HOME) return "AI 喵星球";
+    if (appState === AppState.HOME) return "喵星球";
     if (appState === AppState.WEIBO_HOT_SEARCH) return "吃瓜喵";
+    if (appState === AppState.ANSWER_BOOK) return "答案之书";
     return "猫猫法官";
+  };
+
+  const getTheme = () => {
+    if (appState === AppState.ANSWER_BOOK) return "dark";
+    return "light";
   };
 
   return (
     // Mobile-first container constraint
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto min-h-screen bg-[#f9fafb] shadow-2xl relative">
-        <NavBar
-          onBack={handleBack}
-          title={getTitle()}
-          showBack={appState !== AppState.HOME}
-        />
+        {appState !== AppState.HOME && (
+          <NavBar 
+            onBack={handleBack} 
+            title={getTitle()} 
+            showBack={true} 
+            theme={getTheme()}
+          />
+        )}
 
         <main className="w-full">
           {appState === AppState.HOME && (
             <Home
               onSelectJudge={() => setAppState(AppState.INPUT)}
               onSelectGossip={() => setAppState(AppState.WEIBO_HOT_SEARCH)}
+              onSelectAnswerBook={() => setAppState(AppState.ANSWER_BOOK)}
             />
           )}
 
@@ -81,6 +96,10 @@ const App: React.FC = () => {
 
           {appState === AppState.WEIBO_HOT_SEARCH && (
             <HotSearch onBack={handleBack} />
+          )}
+
+          {appState === AppState.ANSWER_BOOK && (
+            <AnswerBook onBack={handleBack} />
           )}
         </main>
       </div>

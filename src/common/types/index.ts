@@ -5,5 +5,5 @@ export enum AppState {
   RESULT,
   ERROR,
   WEIBO_HOT_SEARCH,
+  ANSWER_BOOK,
 }
-
