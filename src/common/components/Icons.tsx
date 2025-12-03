@@ -168,6 +168,22 @@ export const FortuneCatAvatar = ({
   className?: string;
 }) => (
   <div
+    className={`${className} relative overflow-hidden rounded-full border-4 border-blue-200 shadow-xl bg-purple-50`}
+  >
+    <img
+      src="https://pic1.imgdb.cn/item/69300baed5fdcd03ca9c7335.png"
+      alt="Fortune Cat"
+      className="w-full h-full object-cover transform scale-110"
+    />
+  </div>
+);
+
+export const TarotCatAvatar = ({
+  className = "w-24 h-24",
+}: {
+  className?: string;
+}) => (
+  <div
     className={`${className} relative overflow-hidden rounded-full border-4 border-purple-200 shadow-xl bg-purple-50`}
   >
     <img

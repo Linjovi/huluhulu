@@ -6,6 +6,7 @@ import { LoadingScreen } from "./common/components/LoadingScreen";
 import { Home } from "./common/components/Home";
 import { HotSearch } from "./apps/hot-search/HotSearch";
 import { AnswerBook } from "./apps/answer/index";
+import TarotApp from "./apps/tarot/index";
 import { AppState } from "./common/types";
 import { ConflictData, VerdictResult } from "./apps/judge/types";
 import { getCatJudgement } from "./apps/judge/api";
@@ -42,7 +43,8 @@ const App: React.FC = () => {
     } else if (
       appState === AppState.INPUT ||
       appState === AppState.WEIBO_HOT_SEARCH ||
-      appState === AppState.ANSWER_BOOK
+      appState === AppState.ANSWER_BOOK ||
+      appState === AppState.TAROT
     ) {
       setAppState(AppState.HOME);
     }
@@ -51,12 +53,14 @@ const App: React.FC = () => {
   const getTitle = () => {
     if (appState === AppState.HOME) return "喵星球";
     if (appState === AppState.WEIBO_HOT_SEARCH) return "吃瓜喵";
-    if (appState === AppState.ANSWER_BOOK) return "占卜喵";
+    if (appState === AppState.ANSWER_BOOK) return "答案之书喵";
+    if (appState === AppState.TAROT) return "塔罗秘境喵";
     return "法官喵";
   };
 
   const getTheme = () => {
     if (appState === AppState.ANSWER_BOOK) return "dark";
+    if (appState === AppState.TAROT) return "dark";
     return "light";
   };
 
@@ -79,6 +83,7 @@ const App: React.FC = () => {
               onSelectJudge={() => setAppState(AppState.INPUT)}
               onSelectGossip={() => setAppState(AppState.WEIBO_HOT_SEARCH)}
               onSelectAnswerBook={() => setAppState(AppState.ANSWER_BOOK)}
+              onSelectTarot={() => setAppState(AppState.TAROT)}
             />
           )}
 
@@ -100,6 +105,10 @@ const App: React.FC = () => {
 
           {appState === AppState.ANSWER_BOOK && (
             <AnswerBook onBack={handleBack} />
+          )}
+
+          {appState === AppState.TAROT && (
+            <TarotApp onBack={() => setAppState(AppState.HOME)} />
           )}
         </main>
       </div>

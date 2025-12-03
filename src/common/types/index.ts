@@ -6,4 +6,5 @@ export enum AppState {
   ERROR,
   WEIBO_HOT_SEARCH,
   ANSWER_BOOK,
+  TAROT,
 }

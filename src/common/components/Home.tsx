@@ -1,16 +1,23 @@
 import React from "react";
-import { CatJudgeAvatar, GossipCatAvatar, FortuneCatAvatar } from "./Icons";
+import {
+  CatJudgeAvatar,
+  GossipCatAvatar,
+  FortuneCatAvatar,
+  TarotCatAvatar,
+} from "./Icons";
 
 interface HomeProps {
   onSelectJudge: () => void;
   onSelectGossip: () => void;
   onSelectAnswerBook: () => void;
+  onSelectTarot: () => void;
 }
 
 export const Home: React.FC<HomeProps> = ({
   onSelectJudge,
   onSelectGossip,
   onSelectAnswerBook,
+  onSelectTarot,
 }) => {
   return (
     <div
@@ -132,29 +139,77 @@ export const Home: React.FC<HomeProps> = ({
         <button
           style={{
             backgroundImage:
-              "url('https://youke1.picui.cn/s1/2025/12/03/692ff02f94dd5.png')",
+              "url('https://pic1.imgdb.cn/item/69300baed5fdcd03ca9c7336.png')",
             backgroundSize: "70%",
-            backgroundPosition: "120% bottom",
+            backgroundPosition: "140% bottom",
             backgroundRepeat: "no-repeat",
           }}
           onClick={onSelectAnswerBook}
+          className="w-full bg-white p-4 rounded-3xl shadow-lg shadow-gray-100 border border-white flex items-center gap-4 active:scale-95 transition-all group relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-blue-100 to-transparent rounded-bl-full opacity-50"></div>
+
+          <div className="relative">
+            <div className="absolute inset-0 bg-blue-100 rounded-full blur-md opacity-50 group-hover:opacity-80 transition-opacity"></div>
+            <FortuneCatAvatar className="w-16 h-16 relative z-10" />
+          </div>
+
+          <div className="flex-1 text-left z-10">
+            <h3 className="font-bold text-gray-800 text-lg">答案之书喵</h3>
+            <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+              遇事不决？问问答案之书！
+            </p>
+            <div className="mt-2 flex gap-2">
+              <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-100">
+                每日一问 ✨
+              </span>
+            </div>
+          </div>
+
+          <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 group-hover:bg-purple-50 group-hover:text-purple-400 transition-colors z-10">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </button>
+
+        {/* Taro Cat App */}
+        <button
+          style={{
+            backgroundImage:
+              "url('https://youke1.picui.cn/s1/2025/12/03/692ff02f94dd5.png')",
+            backgroundSize: "70%",
+            backgroundPosition: "140% bottom",
+            backgroundRepeat: "no-repeat",
+          }}
+          onClick={onSelectTarot}
           className="w-full bg-white p-4 rounded-3xl shadow-lg shadow-gray-100 border border-white flex items-center gap-4 active:scale-95 transition-all group relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-full opacity-50"></div>
 
           <div className="relative">
             <div className="absolute inset-0 bg-purple-100 rounded-full blur-md opacity-50 group-hover:opacity-80 transition-opacity"></div>
-            <FortuneCatAvatar className="w-16 h-16 relative z-10" />
+            <TarotCatAvatar className="w-16 h-16 relative z-10" />
           </div>
 
           <div className="flex-1 text-left z-10">
-            <h3 className="font-bold text-gray-800 text-lg">神秘の占卜喵</h3>
+            <h3 className="font-bold text-gray-800 text-lg">神秘の塔罗喵</h3>
             <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-              遇事不决？问问神奇猫猫！
+              猫猫占卜师，为你解答人生疑惑！
             </p>
             <div className="mt-2 flex gap-2">
               <span className="bg-purple-50 text-purple-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-100">
-                每日一问 ✨
+                玄学占卜 ✨
               </span>
             </div>
           </div>

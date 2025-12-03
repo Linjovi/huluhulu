@@ -7,6 +7,7 @@ import { weiboHotSearchHandler } from "./routes/weiboHotSearch";
 import { douyinHotSearchHandler } from "./routes/douyinHotSearch";
 import { xiaohongshuHotSearchHandler } from "./routes/xiaohongshuHotSearch";
 import { hotSearchSummaryHandler } from "./routes/hotSearchSummary";
+import { tarotHandler } from "./routes/getTarot";
 
 const logger = morgan("tiny");
 
@@ -32,6 +33,9 @@ app.get("/api/wx_openid", async (req: Request, res: Response) => {
 
 // 猫猫法官接口
 app.post("/api/cat-judgement", catJudgementHandler);
+
+// 塔罗牌解读接口
+app.post("/api/tarot-reading", tarotHandler);
 
 // 微博热搜榜接口
 app.get("/api/weibo-hot-search", weiboHotSearchHandler);
