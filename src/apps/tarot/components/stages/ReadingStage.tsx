@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { DrawnCard } from '../../types';
+import { DrawnCard, TarotReadingResult } from '../../types';
 import Card from '../Card';
 import Button from '../Button';
 import { Star, Loader2, RefreshCw } from 'lucide-react';
@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 
 interface ReadingStageProps {
     drawnCards: DrawnCard[];
-    reading: string;
+    reading: TarotReadingResult | null;
     loading: boolean;
     loadingMsg: string;
     question: string;
@@ -101,9 +101,9 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
 
             {/* Result */}
             {reading && !loading && (
-                <div ref={resultRef} className="w-full max-w-3xl relative mt-12 group perspective-1000 animate-fade-in-up">
+                <div ref={resultRef} className="w-full max-w-5xl relative mt-12 group perspective-1000 animate-fade-in-up px-4">
 
-                    <div className="relative bg-[#1a1638]/80 backdrop-blur-md border border-yellow-500/20 rounded-xl p-8 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
+                    <div className="relative bg-[#1a1638]/90 backdrop-blur-md border border-yellow-500/20 rounded-xl p-6 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col gap-8">
                         {/* Decorative corners */}
                         <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-yellow-500/30 rounded-tl-xl"></div>
                         <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-yellow-500/30 rounded-tr-xl"></div>
@@ -111,15 +111,57 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
                         <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-yellow-500/30 rounded-br-xl"></div>
 
                         {question && (
-                            <div className="mb-6 pb-6 border-b border-white/10">
-                                <h3 className="text-sm uppercase tracking-widest text-indigo-400 mb-2">你的问题</h3>
-                                <p className="text-xl text-yellow-100 font-serif italic">"{question}"</p>
+                            <div className="text-center border-b border-white/10 pb-6">
+                                <h3 className="text-xs md:text-sm uppercase tracking-widest text-indigo-400 mb-2">你的问题</h3>
+                                <p className="text-xl md:text-2xl text-yellow-100 font-serif italic">"{question}"</p>
                             </div>
                         )}
 
-                        <div className="prose prose-invert prose-yellow max-w-none font-serif text-justify">
-                            <ReactMarkdown>{reading}</ReactMarkdown>
+                        {/* Intro */}
+                        <div className="prose prose-invert prose-yellow max-w-none font-serif text-lg text-center leading-relaxed text-indigo-100">
+                            <ReactMarkdown>{reading.intro}</ReactMarkdown>
                         </div>
+
+                        {/* Cards Analysis Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            {reading.cards.map((cardAnalysis, idx) => {
+                                const originalCard = drawnCards[idx];
+                                return (
+                                    <div key={idx} className="bg-indigo-950/40 border border-indigo-500/20 rounded-lg p-6 hover:bg-indigo-900/40 transition-colors flex flex-col gap-4">
+                                        <div className="flex items-center gap-4 border-b border-indigo-500/20 pb-4">
+                                            <div className="w-16 h-24 rounded-lg overflow-hidden flex-shrink-0 shadow-lg border border-white/10">
+                                                {originalCard && (
+                                                    <img 
+                                                        src={originalCard.imageUrl} 
+                                                        className={`w-full h-full object-cover ${originalCard.isReversed ? 'transform rotate-180' : ''}`} 
+                                                        alt={cardAnalysis.cardName}
+                                                    />
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs text-indigo-400 uppercase tracking-widest mb-1">{cardAnalysis.position}</span>
+                                                <h4 className="text-yellow-200 font-serif font-bold text-lg">{cardAnalysis.cardName}</h4>
+                                            </div>
+                                        </div>
+                                        <div className="text-gray-300 text-sm leading-relaxed font-serif text-justify flex-grow">
+                                            <ReactMarkdown>{cardAnalysis.interpretation}</ReactMarkdown>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Conclusion */}
+                        <div className="mt-6 bg-gradient-to-r from-indigo-950/30 via-indigo-900/50 to-indigo-950/30 p-8 rounded-xl border border-indigo-500/20 text-center relative overflow-hidden">
+                             <div className="absolute inset-0 bg-yellow-500/5 blur-3xl -z-10"></div>
+                            <h3 className="text-yellow-400 font-serif text-lg mb-4 flex items-center justify-center gap-2">
+                                <Star className="w-4 h-4 fill-yellow-400" /> 命运指引 <Star className="w-4 h-4 fill-yellow-400" />
+                            </h3>
+                            <div className="prose prose-invert prose-yellow max-w-none font-serif text-lg">
+                                <ReactMarkdown>{reading.conclusion}</ReactMarkdown>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div className="mt-12 flex justify-center pb-8">

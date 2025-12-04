@@ -1,8 +1,8 @@
-import { DrawnCard } from "../types";
+import { DrawnCard, TarotReadingResult } from "../types";
 
 interface TarotResponse {
   code: number;
-  data: string;
+  data: TarotReadingResult;
   message?: string;
 }
 
@@ -10,7 +10,7 @@ export const getTarotReading = async (
   cards: DrawnCard[],
   spreadName: string,
   question: string
-): Promise<string> => {
+): Promise<TarotReadingResult> => {
   try {
     const mappedCards = cards.map((card) => ({
       name: card.name,
@@ -50,4 +50,3 @@ export const getTarotReading = async (
     throw new Error("网络链接中断，请稍后再试");
   }
 };
-

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getDeck, SPREAD_CONFIGS } from './constants';
-import { TarotCard, DrawnCard, GameStage, SpreadConfig } from './types';
+import { TarotCard, DrawnCard, GameStage, SpreadConfig, TarotReadingResult } from './types';
 import { getTarotReading } from './services/geminiService';
 import { ChevronLeft } from 'lucide-react';
 import './index.scss';
@@ -35,7 +35,7 @@ const App: React.FC<AppProps> = ({ onBack }) => {
   const [deck, setDeck] = useState<TarotCard[]>([]);
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
   const [drawnIndices, setDrawnIndices] = useState<number[]>([]); // Track which visual cards are gone
-  const [reading, setReading] = useState<string>('');
+  const [reading, setReading] = useState<TarotReadingResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState(LOADING_MESSAGES[0]);
   const [userQuestion, setUserQuestion] = useState('');
@@ -164,7 +164,7 @@ const App: React.FC<AppProps> = ({ onBack }) => {
         setStage('spread_selection');
         setDrawnCards([]);
         setDrawnIndices([]);
-        setReading('');
+        setReading(null);
         setDeck(getDeck()); // Reshuffle for next time
         break;
       default:
@@ -266,7 +266,7 @@ const App: React.FC<AppProps> = ({ onBack }) => {
   const resetGame = () => {
     setStage('intro');
     setDrawnCards([]);
-    setReading('');
+    setReading(null);
     setUserQuestion('');
     setDeck(getDeck());
     window.scrollTo({ top: 0, behavior: 'smooth' });

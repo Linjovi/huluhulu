@@ -36,3 +36,15 @@ export type GameStage =
   | "drawing"
   | "reading"
   | "result";
+
+export interface TarotCardAnalysis {
+  position: string;
+  cardName: string;
+  interpretation: string;
+}
+
+export interface TarotReadingResult {
+  intro: string;
+  cards: TarotCardAnalysis[];
+  conclusion: string;
+}
