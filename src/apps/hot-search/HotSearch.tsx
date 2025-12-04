@@ -206,6 +206,13 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
       case "new":
         return "text-green-500";
       case "boil":
+        return "text-red-600";
+      case "pinned":
+        return "text-blue-600";
+      case "fei":
+        return "text-indigo-500";
+      case "recommend":
+        return "text-cyan-600";
       case "first":
         return "text-red-600";
       case "rumor":
@@ -351,6 +358,12 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
                       ? "新"
                       : item.iconType === "boil"
                       ? "沸"
+                      : item.iconType === "fei"
+                      ? "飞"
+                      : item.iconType === "recommend"
+                      ? "荐"
+                      : item.iconType === "pinned"
+                      ? "置顶"
                       : item.iconType === "first"
                       ? "首发"
                       : item.iconType === "exclusive"
