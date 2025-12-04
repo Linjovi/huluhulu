@@ -32,6 +32,7 @@ export type GameStage =
   | "input_question"
   | "spread_selection"
   | "shuffling"
+  | "cutting"
   | "drawing"
   | "reading"
   | "result";
