@@ -101,9 +101,9 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
 
             {/* Result */}
             {reading && !loading && (
-                <div ref={resultRef} className="w-full max-w-5xl relative mt-12 group perspective-1000 animate-fade-in-up px-4">
+                <div ref={resultRef} className="w-full max-w-5xl relative mt-12 group perspective-1000 animate-fade-in-up">
 
-                    <div className="relative bg-[#1a1638]/90 backdrop-blur-md border border-yellow-500/20 rounded-xl p-6 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col gap-8">
+                    <div className="relative bg-[#1a1638]/90 backdrop-blur-md border border-yellow-500/20 rounded-xl p-2 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col gap-8">
                         {/* Decorative corners */}
                         <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-yellow-500/30 rounded-tl-xl"></div>
                         <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-yellow-500/30 rounded-tr-xl"></div>
@@ -152,7 +152,7 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
                         </div>
 
                         {/* Conclusion */}
-                        <div className="mt-6 bg-gradient-to-r from-indigo-950/30 via-indigo-900/50 to-indigo-950/30 p-8 rounded-xl border border-indigo-500/20 text-center relative overflow-hidden">
+                        <div className="mt-6 bg-gradient-to-r from-indigo-950/30 via-indigo-900/50 to-indigo-950/30 p-4 rounded-xl border border-indigo-500/20 text-center relative overflow-hidden">
                              <div className="absolute inset-0 bg-yellow-500/5 blur-3xl -z-10"></div>
                             <h3 className="text-yellow-400 font-serif text-lg mb-4 flex items-center justify-center gap-2">
                                 <Star className="w-4 h-4 fill-yellow-400" /> 命运指引 <Star className="w-4 h-4 fill-yellow-400" />

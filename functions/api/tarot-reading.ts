@@ -35,6 +35,81 @@ ${cards.join("\n")}
 `;
 }
 
+/**
+ * Attempts to parse JSON, repairing common truncation/format errors if necessary.
+ */
+function safeJsonParse(jsonString: string): any {
+  // 1. Remove markdown code blocks if clearly present
+  let content = jsonString;
+  const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+  if (jsonBlockMatch) {
+    content = jsonBlockMatch[1];
+  } else {
+    content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  }
+  
+  // 2. Try standard parse
+  try {
+    return JSON.parse(content);
+  } catch (e) {
+    // Continue to repair
+  }
+
+  // 3. Repair Logic for Truncated JSON
+  let fixed = content.trim();
+  let inString = false;
+  let escape = false;
+  const stack: string[] = [];
+  
+  for (let i = 0; i < fixed.length; i++) {
+    const char = fixed[i];
+    
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      escape = true;
+      continue;
+    }
+    
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+    
+    if (!inString) {
+      if (char === '{') {
+        stack.push('}');
+      } else if (char === '[') {
+        stack.push(']');
+      } else if (char === '}' || char === ']') {
+        if (stack.length > 0 && stack[stack.length - 1] === char) {
+          stack.pop();
+        }
+      }
+    }
+  }
+  
+  // Close open string
+  if (inString) {
+    fixed += '"';
+  }
+  
+  // Close open structures (in reverse order of opening)
+  while (stack.length > 0) {
+    fixed += stack.pop();
+  }
+  
+  try {
+    return JSON.parse(fixed);
+  } catch (e) {
+    console.error("JSON Repair failed:", e);
+    return null;
+  }
+}
+
 export async function onRequestPost(context: any) {
   const req = context.request;
 
@@ -62,19 +137,17 @@ export async function onRequestPost(context: any) {
       response_format: { type: "json_object" }
     });
 
-    let content = completion.choices[0].message.content?.trim() || "";
-    // Remove markdown code blocks if present (just in case)
-    content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    const content = completion.choices[0].message.content?.trim() || "";
+    
+    let result = safeJsonParse(content);
 
-    let result;
-    try {
-      result = JSON.parse(content);
-    } catch (e) {
-      console.error("JSON Parse Error:", e, content);
+    if (!result) {
+      // Fallback if repair completely failed
+      console.error("Failed to parse tarot response:", content);
       result = {
         intro: "喵？水晶球显示的影像有点模糊，直接把看到的告诉你吧...",
         cards: [],
-        conclusion: content
+        conclusion: content // Show raw text as conclusion so user at least sees something
       };
     }
 
