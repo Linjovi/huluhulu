@@ -234,7 +234,7 @@ export const Home: React.FC<HomeProps> = ({
         {/* Placeholder for 'More' */}
         <div className="w-full bg-gray-100/50 p-4 rounded-3xl border-2 border-dashed border-gray-200 flex items-center justify-center gap-2 text-gray-400">
           <span className="text-lg">🏗️</span>
-          <span className="text-sm font-bold">更多 AI 应用建设中...</span>
+          <span className="text-sm font-bold">更多应用建设中...</span>
         </div>
       </div>
     </div>

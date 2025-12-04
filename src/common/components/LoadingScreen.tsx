@@ -31,7 +31,7 @@ export const LoadingScreen: React.FC = () => {
         <h3 className="text-xl font-bold text-gray-800 transition-all duration-300">
           {messages[messageIndex]}
         </h3>
-        <p className="text-gray-500 text-xs">AI 法官正在生成裁决书</p>
+        <p className="text-gray-500 text-xs">猫猫法官正在生成裁决书</p>
       </div>
 
       <div className="flex space-x-2 pt-2">
