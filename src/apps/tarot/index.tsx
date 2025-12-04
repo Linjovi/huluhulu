@@ -203,19 +203,6 @@ const App: React.FC<AppProps> = ({ onBack }) => {
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
       
-      {/* Bottom Back Button (Flow Content) */}
-      {stage !== 'intro' && stage !== 'shuffling' && (
-        <div className="w-full flex justify-center pb-8 z-50 animate-fade-in">
-          <button 
-            onClick={handleBack}
-            className="px-6 py-2 bg-indigo-950/80 backdrop-blur-md border border-indigo-500/30 rounded-full text-indigo-200 hover:text-yellow-100 hover:bg-indigo-900 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(0,0,0,0.5)] active:scale-95 group hover:border-yellow-500/30 text-sm"
-          >
-            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-serif tracking-widest">返回上一步喵</span>
-          </button>
-        </div>
-      )}
-
       {/* Header */}
       <header className="p-6 text-center z-10 animate-fade-in pt-12 md:pt-6">
         <p className="text-indigo-200 text-xs md:text-sm mt-3 font-light tracking-[0.2em] uppercase opacity-80">
@@ -496,6 +483,19 @@ const App: React.FC<AppProps> = ({ onBack }) => {
           </div>
         )}
       </main>
+
+      {/* Bottom Back Button (Flow Content) */}
+      {stage !== 'intro' && stage !== 'shuffling' && (
+        <div className="w-full flex justify-center pb-4 z-50 animate-fade-in relative">
+          <button 
+            onClick={handleBack}
+            className="px-6 py-2 bg-indigo-950/80 backdrop-blur-md border border-indigo-500/30 rounded-full text-indigo-200 hover:text-yellow-100 hover:bg-indigo-900 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(0,0,0,0.5)] active:scale-95 group hover:border-yellow-500/30 text-sm"
+          >
+            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-serif tracking-widest">返回上一步喵</span>
+          </button>
+        </div>
+      )}
 
       <footer className="w-full p-6 text-center text-xs text-indigo-400/30 relative z-10 font-serif tracking-widest uppercase">
         <p>Mystic AI Tarot &copy; 2024</p>
