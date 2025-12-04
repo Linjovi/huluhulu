@@ -103,7 +103,7 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
             {reading && !loading && (
                 <div ref={resultRef} className="w-full max-w-5xl relative mt-12 group perspective-1000 animate-fade-in-up">
 
-                    <div className="relative bg-[#1a1638]/90 backdrop-blur-md border border-yellow-500/20 rounded-xl p-2 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col gap-4">
+                    <div className="relative bg-[#1a1638]/90 backdrop-blur-md border border-yellow-500/20 rounded-xl p-3 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col gap-3">
                         {/* Decorative corners */}
                         <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-yellow-500/30 rounded-tl-xl"></div>
                         <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-yellow-500/30 rounded-tr-xl"></div>
@@ -111,7 +111,7 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
                         <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-yellow-500/30 rounded-br-xl"></div>
 
                         {question && (
-                            <div className="text-center border-b border-white/10 pb-6">
+                            <div className="text-center border-b border-white/10">
                                 <h3 className="text-xs md:text-sm uppercase tracking-widest text-indigo-400 mb-2">你的问题</h3>
                                 <p className="text-xl md:text-2xl text-yellow-100 font-serif italic">"{question}"</p>
                             </div>
@@ -123,11 +123,11 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
                         </div>
 
                         {/* Cards Analysis Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
                             {reading.cards.map((cardAnalysis, idx) => {
                                 const originalCard = drawnCards[idx];
                                 return (
-                                    <div key={idx} className="bg-indigo-950/40 border border-indigo-500/20 rounded-lg p-6 hover:bg-indigo-900/40 transition-colors flex flex-col gap-4">
+                                    <div key={idx} className="bg-indigo-950/40 border border-indigo-500/20 rounded-lg p-4 hover:bg-indigo-900/40 transition-colors flex flex-col gap-4">
                                         <div className="flex items-center gap-4 border-b border-indigo-500/20">
                                             <div className="w-16 h-24 rounded-lg overflow-hidden flex-shrink-0 shadow-lg border border-white/10">
                                                 {originalCard && (
@@ -164,7 +164,7 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
 
                     </div>
 
-                    <div className="mt-12 flex justify-center pb-8">
+                    <div className="mt-12 flex justify-center">
                         <Button onClick={onReset} variant="secondary">
                             <span className="flex items-center gap-2">
                                 <RefreshCw className="w-4 h-4" /> 重新占卜喵

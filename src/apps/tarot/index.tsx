@@ -360,11 +360,6 @@ const App: React.FC<AppProps> = ({ onBack }) => {
           </button>
         </div>
       )}
-
-      <footer className="w-full p-6 text-center text-xs text-indigo-400/30 relative z-10 font-serif tracking-widest uppercase">
-        <p>Mystic Tarot &copy; 2025</p>
-      </footer>
-
     </div>
   );
 };
