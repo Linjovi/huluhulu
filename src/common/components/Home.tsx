@@ -139,7 +139,7 @@ export const Home: React.FC<HomeProps> = ({
         <button
           style={{
             backgroundImage:
-              "url('https://pic1.imgdb.cn/item/69300baed5fdcd03ca9c7336.png')",
+              "url(https://pic1.imgdb.cn/item/69315edc1f1698c4ff0bedb0.png)",
             backgroundSize: "70%",
             backgroundPosition: "140% bottom",
             backgroundRepeat: "no-repeat",

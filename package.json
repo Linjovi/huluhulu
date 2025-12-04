@@ -7,7 +7,8 @@
     "build": "webpack --mode production",
     "dev": "webpack serve --mode development",
     "dev:watch": "webpack --mode development --watch",
-    "start": "npm run build && ts-node index.ts"
+    "start": "npm run build && ts-node index.ts",
+    "publish": "npm run build && npx wrangler pages deploy public"
   },
   "author": "",
   "license": "Apache-2.0",

@@ -171,7 +171,7 @@ export const FortuneCatAvatar = ({
     className={`${className} relative overflow-hidden rounded-full border-4 border-blue-200 shadow-xl bg-purple-50`}
   >
     <img
-      src="https://pic1.imgdb.cn/item/69300baed5fdcd03ca9c7335.png"
+      src="https://pic1.imgdb.cn/item/69315edc1f1698c4ff0bedaf.png"
       alt="Fortune Cat"
       className="w-full h-full object-cover transform scale-110"
     />
