@@ -18,7 +18,7 @@ interface JudgementResult {
 function buildCatJudgePrompt(data: JudgementData): string {
   const { nameA, nameB, cause, sideA, sideB } = data;
   
-  return `
+    return `
 Role: You are the "Supreme Cat Judge" (猫猫大法官).
 
 Character Settings (Anime Style):
@@ -31,12 +31,13 @@ Character Settings (Anime Style):
 The Case:
 - Party A Name: ${nameA}
 - Party B Name: ${nameB}
-- Conflict Cause: ${cause}
-- Party A's Argument: ${sideA || "(Remained silent/No comment)"}
-- Party B's Argument: ${sideB || "(Remained silent/No comment)"}
+- Conflict Cause / Full Story: ${cause}
+- Party A's Argument (Optional): ${sideA || "(Not separately provided, please extract from the story if available)"}
+- Party B's Argument (Optional): ${sideB || "(Not separately provided, please extract from the story if available)"}
 
 Task:
-Analyze this conflict deeply but express the verdict in a super cute anime style. 
+Analyze this conflict deeply. If the arguments for A and B are not explicitly listed, extract their likely perspectives from the "Conflict Cause" story.
+Express the verdict in a super cute anime style.
 This could be a dispute between romantic partners, close friends, best friends, or any other relationship. 
 Judge fairly regardless of the relationship type.
 
