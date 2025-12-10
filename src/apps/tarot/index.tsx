@@ -29,6 +29,17 @@ interface AppProps {
   onBack: () => void;
 }
 
+// Helper to get a scattered deck
+const getScatteredDeck = () => {
+  const initialDeck = getDeck();
+  return initialDeck.map(card => ({
+    ...card,
+    scatterRotation: Math.random() * 360,
+    scatterX: (Math.random() - 0.5) * 1000,
+    scatterY: (Math.random() - 0.5) * 600,
+  }));
+};
+
 const App: React.FC<AppProps> = ({ onBack }) => {
   const [stage, setStage] = useState<GameStage>('intro');
   const [selectedSpread, setSelectedSpread] = useState<SpreadConfig>(SPREAD_CONFIGS[1]); // Default to Triangle
@@ -62,19 +73,12 @@ const App: React.FC<AppProps> = ({ onBack }) => {
 
   // Ref to track current stage for async callbacks
   const stageRef = useRef(stage);
+  // Ref to hold the pre-fetched reading promise
+  const readingPromiseRef = useRef<Promise<TarotReadingResult> | null>(null);
 
   // Initialize deck and scatter cards
   useEffect(() => {
-    const initialDeck = getDeck();
-    // Add random rotation and position offset for "scattered" look in 2D
-    // Scatter range: +/- 500px horizontally, +/- 300px vertically
-    const scatteredDeck = initialDeck.map(card => ({
-      ...card,
-      scatterRotation: Math.random() * 360, // Full rotation
-      scatterX: (Math.random() - 0.5) * 1000,
-      scatterY: (Math.random() - 0.5) * 600,
-    }));
-    setDeck(scatteredDeck);
+    setDeck(getScatteredDeck());
   }, []);
 
   // Update stage ref
@@ -140,6 +144,7 @@ const App: React.FC<AppProps> = ({ onBack }) => {
     setGrabbedIndex(null);
     setCutOffset(0);
     setIsCutSwapped(false);
+    readingPromiseRef.current = null; // Cancel any pending reading
     setPawState(prev => ({ ...prev, visible: false, phase: 'idle' }));
     switch (stage) {
       case 'input_question':
@@ -156,7 +161,7 @@ const App: React.FC<AppProps> = ({ onBack }) => {
         setStage('spread_selection');
         setDrawnCards([]);
         setDrawnIndices([]);
-        setDeck(getDeck());
+        setDeck(getScatteredDeck());
         break;
       case 'reading':
       case 'result':
@@ -165,7 +170,7 @@ const App: React.FC<AppProps> = ({ onBack }) => {
         setDrawnCards([]);
         setDrawnIndices([]);
         setReading(null);
-        setDeck(getDeck()); // Reshuffle for next time
+        setDeck(getScatteredDeck()); // Reshuffle for next time
         break;
       default:
         break;
@@ -229,13 +234,25 @@ const App: React.FC<AppProps> = ({ onBack }) => {
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (drawnCards.length === selectedSpread.cards && stage === 'drawing' && animatingCard === null) {
+      
+      // Start the API request immediately in the background
+      // This optimizes the experience by pre-fetching while user flips cards later
+      if (!readingPromiseRef.current) {
+        readingPromiseRef.current = getTarotReading(drawnCards, selectedSpread.name, userQuestion)
+            .catch(err => {
+                console.error("Pre-fetch failed:", err);
+                // Return a rejected promise or handle it so the subsequent await throws
+                throw err;
+            });
+      }
+
       timer = setTimeout(() => {
         setStage('reading');
         setDrawnIndices([]); // Reset for next time (though we usually reshuffle)
       }, 1000);
     }
     return () => clearTimeout(timer);
-  }, [drawnCards, stage, animatingCard, selectedSpread.cards]);
+  }, [drawnCards, stage, animatingCard, selectedSpread.cards, selectedSpread.name, userQuestion]);
 
   const handleReveal = async (index: number) => {
     if (drawnCards[index].isRevealed) return;
@@ -253,14 +270,30 @@ const App: React.FC<AppProps> = ({ onBack }) => {
   const generateInterpretation = async (cards: DrawnCard[]) => {
     setLoading(true);
 
-    const result = await getTarotReading(cards, selectedSpread.name, userQuestion);
+    try {
+        let result: TarotReadingResult;
+        
+        // Check if we have a pre-fetched promise
+        if (readingPromiseRef.current) {
+            result = await readingPromiseRef.current;
+        } else {
+            // Fallback if somehow missed (shouldn't happen with current logic)
+            result = await getTarotReading(cards, selectedSpread.name, userQuestion);
+        }
 
-    // Safety check: ensure we are still in the reading stage
-    if (stageRef.current !== 'reading') return;
+        // Safety check: ensure we are still in the reading stage
+        if (stageRef.current !== 'reading') return;
 
-    setReading(result);
-    setLoading(false);
-    setStage('result');
+        setReading(result);
+        setLoading(false);
+        setStage('result');
+    } catch (error) {
+        console.error("Reading failed:", error);
+        setLoading(false);
+        // Optional: Show error state or toast
+        // For now, maybe reset the promise so they can try again if we added a retry button
+        readingPromiseRef.current = null;
+    }
   };
 
   const resetGame = () => {
@@ -268,7 +301,8 @@ const App: React.FC<AppProps> = ({ onBack }) => {
     setDrawnCards([]);
     setReading(null);
     setUserQuestion('');
-    setDeck(getDeck());
+    setDeck(getScatteredDeck());
+    readingPromiseRef.current = null;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

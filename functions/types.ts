@@ -42,12 +42,19 @@ export interface JudgementData {
   sideB?: string;
 }
 
+export interface CardInfo {
+  name: string;
+  isReversed: boolean;
+  position: string;
+}
+
 export interface TarotRequestData {
-  cards: string[];
+  cards: CardInfo[];
   spreadName: string;
   question?: string;
 }
 
 export interface Env {
   DEEPSEEK_API_KEY: string;
+  GOOGLE_API_KEY: string;
 }
