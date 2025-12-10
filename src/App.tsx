@@ -58,7 +58,7 @@ const App: React.FC = () => {
     if (appState === AppState.WEIBO_HOT_SEARCH) return "吃瓜喵";
     if (appState === AppState.ANSWER_BOOK) return "答案之书喵";
     if (appState === AppState.TAROT) return "塔罗秘境喵";
-    if (appState === AppState.COMPLIMENT) return "夸夸喵";
+    if (appState === AppState.COMPLIMENT) return "";
     return "法官喵";
   };
 
