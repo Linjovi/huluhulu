@@ -24,6 +24,15 @@ interface SourceData {
   summary?: string;
 }
 
+const LOADING_MESSAGES = [
+  "吃瓜喵正在疯狂吃瓜中...",
+  "正在打听娱乐圈的小秘密...",
+  "嘘...好像听到了什么不得了的事情...",
+  "正在整理今天的瓜田...",
+  "前排出售瓜子饮料矿泉水...",
+  "瓜太大，本喵需要消化一下...",
+];
+
 export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   const [source, setSource] = useState<Source>("douyin");
   const [weiboData, setWeiboData] = useState<SourceData | null>(null);
@@ -33,6 +42,7 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
 
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState(LOADING_MESSAGES[0]);
 
   const [loading, setLoading] = useState<Record<Source, boolean>>({
     weibo: false,
@@ -185,6 +195,18 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
     fetchSummary();
   }, []);
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (summaryLoading) {
+      let index = 0;
+      interval = setInterval(() => {
+        index = (index + 1) % LOADING_MESSAGES.length;
+        setLoadingText(LOADING_MESSAGES[index]);
+      }, 4000);
+    }
+    return () => clearInterval(interval);
+  }, [summaryLoading]);
+
   const handleTabChange = (newSource: Source) => {
     setSource(newSource);
     if (swiperRef.current) {
@@ -239,14 +261,15 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
   const renderSummarySection = () => {
     if (summaryLoading) {
       return (
-        <div className="mx-4 mt-4 p-4 bg-white/40 backdrop-blur-md rounded-2xl border border-white/50 animate-pulse">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-white/50 rounded-full"></div>
-            <div className="h-4 bg-white/50 rounded w-32"></div>
-          </div>
-          <div className="space-y-2">
-            <div className="h-3 bg-white/50 rounded w-full"></div>
-            <div className="h-3 bg-white/50 rounded w-2/3"></div>
+        <div className="mx-4 mt-4 p-6 bg-white/60 backdrop-blur-md rounded-2xl border border-white/60 flex flex-col items-center justify-center gap-4 min-h-[120px]">
+          <GossipCatAvatar className="w-16 h-16 animate-bounce drop-shadow-md" />
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-orange-500 font-bold text-sm animate-pulse transition-all duration-500">
+              {loadingText}
+            </p>
+            <p className="text-gray-400 text-xs">
+              正在提炼全网热点精华
+            </p>
           </div>
         </div>
       );
@@ -296,15 +319,14 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
       return (
         <div className="flex flex-col items-center justify-center py-12 animate-pulse">
           <div
-            className={`w-10 h-10 border-3 rounded-full animate-spin mb-3 ${
-              targetSource === "weibo"
-                ? "border-pink-200 border-t-pink-500"
-                : targetSource === "douyin"
+            className={`w-10 h-10 border-3 rounded-full animate-spin mb-3 ${targetSource === "weibo"
+              ? "border-pink-200 border-t-pink-500"
+              : targetSource === "douyin"
                 ? "border-gray-200 border-t-black"
                 : targetSource === "xiaohongshu"
-                ? "border-red-200 border-t-red-500"
-                : "border-cyan-200 border-t-cyan-500"
-            }`}
+                  ? "border-red-200 border-t-red-500"
+                  : "border-cyan-200 border-t-cyan-500"
+              }`}
           ></div>
           <p className="text-gray-400 text-xs font-medium">正在搬运大瓜...</p>
         </div>
@@ -317,15 +339,14 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
           <p className="text-gray-500 mb-4 text-sm">{isError}</p>
           <button
             onClick={() => fetchSourceData(targetSource)}
-            className={`px-6 py-2 rounded-full font-bold shadow-sm active:scale-95 transition-all text-white text-sm ${
-              targetSource === "weibo"
-                ? "bg-pink-500"
-                : targetSource === "douyin"
+            className={`px-6 py-2 rounded-full font-bold shadow-sm active:scale-95 transition-all text-white text-sm ${targetSource === "weibo"
+              ? "bg-pink-500"
+              : targetSource === "douyin"
                 ? "bg-black"
                 : targetSource === "xiaohongshu"
-                ? "bg-red-500"
-                : "bg-cyan-600"
-            }`}
+                  ? "bg-red-500"
+                  : "bg-cyan-600"
+              }`}
           >
             重试一下
           </button>
@@ -341,7 +362,7 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
           const maoyanItem = isMaoyan ? (item as MaoyanWebHeatItem) : null;
           const hotValue = isMaoyan ? maoyanItem?.heat : (item as HotSearchItem).hot;
           const link = item.link || "#";
-          
+
           return (
             <a
               key={index}
@@ -360,44 +381,44 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                   <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-800 truncate text-[15px] group-hover:text-pink-600 transition-colors">
-                        {item.title}
-                      </h3>
-                      {item.iconType && (
-                        <span
-                          className={`text-[10px] font-bold shrink-0 px-1 py-0.5 rounded border border-current leading-none ${getIconColor(
-                            item.iconType
-                          )}`}
-                        >
-                          {item.iconType === "hot"
-                            ? "热"
-                            : item.iconType === "new"
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-gray-800 truncate text-[15px] group-hover:text-pink-600 transition-colors">
+                      {item.title}
+                    </h3>
+                    {item.iconType && (
+                      <span
+                        className={`text-[10px] font-bold shrink-0 px-1 py-0.5 rounded border border-current leading-none ${getIconColor(
+                          item.iconType
+                        )}`}
+                      >
+                        {item.iconType === "hot"
+                          ? "热"
+                          : item.iconType === "new"
                             ? "新"
                             : item.iconType === "boil"
-                            ? "沸"
-                            : item.iconType === "fei"
-                            ? "飞"
-                            : item.iconType === "recommend"
-                            ? "荐"
-                            : item.iconType === "pinned"
-                            ? "置顶"
-                            : item.iconType === "first"
-                            ? "首发"
-                            : item.iconType === "exclusive"
-                            ? "独家"
-                            : item.iconType === "rumor"
-                            ? "辟谣"
-                            : item.iconType}
-                        </span>
-                      )}
-                   </div>
-                   {isMaoyan && maoyanItem && (
-                       <div className="flex gap-2 text-xs text-gray-400 mt-1">
-                           <span className="bg-gray-50 px-1.5 rounded text-gray-500">{maoyanItem.platform}</span>
-                           <span>{maoyanItem.releaseInfo}</span>
-                       </div>
-                   )}
+                              ? "沸"
+                              : item.iconType === "fei"
+                                ? "飞"
+                                : item.iconType === "recommend"
+                                  ? "荐"
+                                  : item.iconType === "pinned"
+                                    ? "置顶"
+                                    : item.iconType === "first"
+                                      ? "首发"
+                                      : item.iconType === "exclusive"
+                                        ? "独家"
+                                        : item.iconType === "rumor"
+                                          ? "辟谣"
+                                          : item.iconType}
+                      </span>
+                    )}
+                  </div>
+                  {isMaoyan && maoyanItem && (
+                    <div className="flex gap-2 text-xs text-gray-400 mt-1">
+                      <span className="bg-gray-50 px-1.5 rounded text-gray-500">{maoyanItem.platform}</span>
+                      <span>{maoyanItem.releaseInfo}</span>
+                    </div>
+                  )}
                 </div>
 
                 {hotValue && hotValue !== "0" && (
@@ -414,15 +435,14 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
           <div className="mt-6 text-center">
             <button
               onClick={() => refreshData()}
-              className={`text-sm transition-colors flex items-center justify-center gap-1 mx-auto ${
-                targetSource === "weibo"
-                  ? "text-gray-400 hover:text-pink-500"
-                  : targetSource === "douyin"
+              className={`text-sm transition-colors flex items-center justify-center gap-1 mx-auto ${targetSource === "weibo"
+                ? "text-gray-400 hover:text-pink-500"
+                : targetSource === "douyin"
                   ? "text-gray-400 hover:text-black"
                   : targetSource === "xiaohongshu"
-                  ? "text-gray-400 hover:text-red-500"
-                  : "text-gray-400 hover:text-cyan-600"
-              }`}
+                    ? "text-gray-400 hover:text-red-500"
+                    : "text-gray-400 hover:text-cyan-600"
+                }`}
             >
               <svg
                 className="w-4 h-4"
@@ -457,11 +477,10 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
           <div className="flex p-1 bg-gray-100/80 rounded-xl backdrop-blur-sm shadow-inner">
             <button
               onClick={() => handleTabChange("douyin")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
-                source === "douyin"
-                  ? "bg-white text-black shadow-sm scale-[1.02]"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${source === "douyin"
+                ? "bg-white text-black shadow-sm scale-[1.02]"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
             >
               <div className="flex items-center justify-center gap-1.5">
                 <span className="text-base">🎵</span> 抖音
@@ -469,11 +488,10 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
             </button>
             <button
               onClick={() => handleTabChange("xiaohongshu")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
-                source === "xiaohongshu"
-                  ? "bg-white text-red-500 shadow-sm scale-[1.02]"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${source === "xiaohongshu"
+                ? "bg-white text-red-500 shadow-sm scale-[1.02]"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
             >
               <div className="flex items-center justify-center gap-1.5">
                 <span className="text-base">📕</span> 小红书
@@ -481,11 +499,10 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
             </button>
             <button
               onClick={() => handleTabChange("weibo")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
-                source === "weibo"
-                  ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${source === "weibo"
+                ? "bg-white text-pink-600 shadow-sm scale-[1.02]"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
             >
               <div className="flex items-center justify-center gap-1.5">
                 <span className="text-base">🔴</span> 微博
@@ -493,11 +510,10 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
             </button>
             <button
               onClick={() => handleTabChange("maoyan")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
-                source === "maoyan"
-                  ? "bg-white text-cyan-600 shadow-sm scale-[1.02]"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${source === "maoyan"
+                ? "bg-white text-cyan-600 shadow-sm scale-[1.02]"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
             >
               <div className="flex items-center justify-center gap-1.5">
                 <span className="text-base">🎬</span> 网剧
@@ -520,10 +536,10 @@ export const HotSearch: React.FC<HotSearchProps> = ({ onBack }) => {
               index === 0
                 ? "douyin"
                 : index === 1
-                ? "xiaohongshu"
-                : index === 2
-                ? "weibo"
-                : "maoyan";
+                  ? "xiaohongshu"
+                  : index === 2
+                    ? "weibo"
+                    : "maoyan";
             setSource(newSource);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
