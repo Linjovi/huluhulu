@@ -1,10 +1,14 @@
-import { createGrsaiClient, safeParseJSON, getComplimentStylePrompt } from "../utils";
+import {
+  createGrsaiClient,
+  safeParseJSON,
+  getComplimentStylePrompt,
+} from "../utils";
 
 export async function onRequestPost(context: any) {
   const req = context.request;
 
   try {
-    const { image, prompt, mimeType, outputSize, style } = await req.json();
+    const { image, prompt, mimeType, outputSize, style, stream } = await req.json();
 
     let finalPrompt = prompt;
     if (style) {
@@ -13,7 +17,9 @@ export async function onRequestPost(context: any) {
         finalPrompt = `${cachedPrompt}，${prompt || ""}`;
       } else {
         // Fallback: use style title itself
-        finalPrompt = `请参考“${style}”的风格，对这张照片进行风格化调整。${prompt || ""}`;
+        finalPrompt = `请参考“${style}”的风格，对这张照片进行风格化调整。${
+          prompt || ""
+        }`;
       }
     }
 
@@ -28,8 +34,8 @@ export async function onRequestPost(context: any) {
     }
 
     const openai = createGrsaiClient(context.env);
-    // Using the same model ID as before, assuming Grsai supports it or maps it.
-    const modelId = "gemini-3-pro-image-preview";
+    // User requested "nano-banana-fast"
+    const modelId = "nano-banana-fast";
 
     const systemInstruction = `
 Role: You are an Expert AI Image Editor.
@@ -42,26 +48,76 @@ Guidelines:
 Output: You must return a JSON object containing the 'base64Image' of the edited result.
     `;
 
+    const messages: any[] = [
+      { role: "system", content: systemInstruction },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: `Instruction: ${finalPrompt}` },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:${mimeType || "image/jpeg"};base64,${image}`,
+            },
+          },
+        ],
+      },
+    ];
+
+    if (stream) {
+      const streamResponse = await openai.chat.completions.create({
+        model: modelId,
+        messages: messages,
+        stream: true,
+        response_format: { type: "json_object" },
+      });
+
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      const encoder = new TextEncoder();
+
+      (async () => {
+        try {
+          for await (const chunk of streamResponse) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            if (content) {
+              await writer.write(
+                encoder.encode(`data: ${JSON.stringify({ content })}\n\n`)
+              );
+            }
+          }
+          await writer.write(encoder.encode("data: [DONE]\n\n"));
+        } catch (e) {
+          console.error("Streaming error:", e);
+          await writer.write(
+            encoder.encode(
+              `data: ${JSON.stringify({ error: "Streaming failed" })}\n\n`
+            )
+          );
+        } finally {
+          await writer.close();
+        }
+      })();
+
+      return new Response(readable, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
+    }
+
+    // Non-streaming mode
     const completion = await openai.chat.completions.create({
       model: modelId,
-      messages: [
-        { role: "system", content: systemInstruction },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: `Instruction: ${finalPrompt}` },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${mimeType || "image/jpeg"};base64,${image}`,
-              },
-            },
-          ],
-        },
-      ],
+      messages: messages,
+      stream: false,
       response_format: { type: "json_object" },
     });
 
+    console.log("completion", completion.choices[0]);
+    
     let result: any = {};
     const content = completion.choices[0].message.content;
 
