@@ -1,13 +1,11 @@
-import {
-  safeParseJSON,
-  getComplimentStylePrompt,
-} from "../utils";
+import { safeParseJSON, getComplimentStylePrompt } from "../utils";
 
 export async function onRequestPost(context: any) {
   const req = context.request;
 
   try {
-    const { image, prompt, mimeType, outputSize, style, stream } = await req.json();
+    const { image, prompt, mimeType, outputSize, style, stream } =
+      await req.json();
 
     let finalPrompt = prompt;
     if (style) {
@@ -52,14 +50,15 @@ export async function onRequestPost(context: any) {
       model: "nano-banana-pro",
       prompt: `${systemInstruction}\n\nInstruction: ${finalPrompt}`,
       urls: [image], // Assuming API accepts base64 string in 'image' field
-      stream: !!stream,
+      aspectRatio: "auto",
+      imageSize: "2K",
     };
 
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(payload),
     });
@@ -69,50 +68,50 @@ export async function onRequestPost(context: any) {
       // If the upstream API returns standard SSE, we can just pipe it.
       // We wrap it in a new Response to ensure headers are correct for the client.
       const { readable, writable } = new TransformStream();
-      
+
       // If the upstream response body is null, we can't stream.
       if (!response.body) {
         throw new Error("Upstream response has no body for streaming");
       }
 
       response.body.pipeTo(writable).catch((err) => {
-          console.error("Stream pipe error:", err);
+        console.error("Stream pipe error:", err);
       });
 
       return new Response(readable, {
         headers: {
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache",
-          "Connection": "keep-alive",
+          Connection: "keep-alive",
         },
       });
     }
 
     // Non-streaming mode
     if (!response.ok) {
-       const errText = await response.text();
-       throw new Error(`API Error ${response.status}: ${errText}`);
+      const errText = await response.text();
+      throw new Error(`API Error ${response.status}: ${errText}`);
     }
 
     const result = await response.json();
-    
+
     // Check if result needs parsing or is already in expected format
     // Assuming result structure contains base64Image directly or inside data
-    // Adapt as needed based on actual API response. 
+    // Adapt as needed based on actual API response.
     // If API returns { base64Image: "..." } or { data: { base64Image: "..." } }
-    
+
     let base64Image = null;
     if (result.base64Image) {
-        base64Image = result.base64Image;
+      base64Image = result.base64Image;
     } else if (result.data && result.data.base64Image) {
-        base64Image = result.data.base64Image;
+      base64Image = result.data.base64Image;
     }
 
     if (!base64Image) {
-        // Fallback: maybe it returns OpenAI-like choice structure?
-        // But user said "don't use openai anymore".
-        console.error("Unexpected API response structure:", result);
-        throw new Error("修图失败，返回数据格式不正确喵~");
+      // Fallback: maybe it returns OpenAI-like choice structure?
+      // But user said "don't use openai anymore".
+      console.error("Unexpected API response structure:", result);
+      throw new Error("修图失败，返回数据格式不正确喵~");
     }
 
     // Re-wrap to match our frontend expectation
@@ -126,7 +125,6 @@ export async function onRequestPost(context: any) {
         headers: { "Content-Type": "application/json" },
       }
     );
-
   } catch (error: any) {
     console.error("Edit API Error:", error);
     return new Response(
