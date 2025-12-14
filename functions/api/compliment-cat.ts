@@ -41,20 +41,17 @@ export async function onRequestPost(context: any) {
     }
 
     const systemInstruction = `
-Role: You are an Expert AI Image Editor.
-Task: Edit the supplied image according to the user's detailed instruction.
-Guidelines:
-1. **Professional Quality**: Ensure the edited result is photorealistic, high-resolution, and visually stunning.
-2. **Precise Execution**: Follow the user's request exactly. If they ask for a specific change (e.g., "remove background"), do it cleanly.
-3. **Preserve Details**: Maintain the original identity, lighting, and style of the key subjects unless explicitly asked to change them.
-4. **Enhancement**: If the user's instruction is vague (e.g., "make it better"), apply professional color grading, lighting adjustments, and subtle beauty enhancements to create a magazine-quality photo.
-Output: You must return a JSON object containing the 'base64Image' of the edited result.
+(Masterpiece, Best Quality, Photorealistic, 8K, Ultra Detailed), Professional Photography, Cinematic Lighting.
+- Ensure the result is photorealistic, high-resolution, and visually stunning.
+- Maintain the original subject's identity, facial details, and lighting conditions.
+- Execute the editing instruction precisely.
+- Apply professional color grading and subtle enhancements.
     `;
 
     const payload = {
       model: "nano-banana-pro",
       prompt: `${systemInstruction}\n\nInstruction: ${finalPrompt}`,
-      image: image, // Assuming API accepts base64 string in 'image' field
+      urls: [image], // Assuming API accepts base64 string in 'image' field
       stream: !!stream,
     };
 
