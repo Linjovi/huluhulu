@@ -15,7 +15,7 @@ export const Home: React.FC<HomeProps> = ({
 }) => {
   const [hoveredArea, setHoveredArea] = useState<string | null>(null);
 
-  const mapImageUrl = "https://pic1.imgdb.cn/item/693e46c5b297d4843ce57ea3.jpg"; // 如果图片在public目录，使用这个路径
+  const mapImageUrl = "https://pic1.imgdb.cn/item/693e6db8b297d4843ce66bd7.jpg"; // 如果图片在public目录，使用这个路径
 
   return (
     <div className="relative w-full min-h-screen bg-gradient-to-b from-yellow-50 via-green-50 to-blue-50 overflow-hidden">

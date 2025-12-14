@@ -20,7 +20,7 @@ export const CatPawNavigator: React.FC<CatPawNavigatorProps> = ({ className = ''
   };
 
   return (
-    <div className={`absolute right-0 top-1/2 -translate-y-1/2 z-50 flex items-center ${className}`}>
+    <div className={`fixed right-0 bottom-32 z-50 flex items-center ${className}`}>
       {/* Cat Head - Hidden initially, slides out when expanded */}
       <div 
         className={`
