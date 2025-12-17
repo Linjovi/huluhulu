@@ -15,6 +15,7 @@ interface CacheEntry<T> {
 export interface ComplimentStyle {
   title: string;
   prompt: string;
+  tags?: string[];
 }
 
 const DEFAULT_STYLES: Record<string, string> = {
