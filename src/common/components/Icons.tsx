@@ -204,8 +204,24 @@ export const ComplimentCatAvatar = ({
   >
     {/* Using a bright/happy cat image for Compliment Cat */}
     <img
-      src="https://pic1.imgdb.cn/item/693921056166b8110136209c.png"
+      src="https://pic1.imgdb.cn/item/6943c1dd2ee916d1a3af9521.png"
       alt="Compliment Cat"
+      className="w-full h-full object-cover transform scale-110"
+    />
+  </div>
+);
+
+export const MemeCatAvatar = ({
+  className = "w-24 h-24",
+}: {
+  className?: string;
+}) => (
+  <div
+    className={`${className} relative overflow-hidden rounded-full border-4 border-green-200 shadow-xl bg-green-50`}
+  >
+    <img
+      src="https://pic1.imgdb.cn/item/693921056166b8110136209c.png"
+      alt="Meme Cat"
       className="w-full h-full object-cover transform scale-110"
     />
   </div>
