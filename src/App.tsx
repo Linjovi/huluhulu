@@ -13,6 +13,7 @@ import TarotApp from "./apps/tarot/index";
 import ComplimentApp from "./apps/compliment/index";
 import MemeApp from "./apps/meme/index";
 import { JudgeApp } from "./apps/judge/JudgeApp";
+import MeowBTIApp from "./apps/mbti/index";
 import { SEO } from "./common/components/SEO";
 import { CatPawNavigator } from "./common/components/CatPawNavigator";
 
@@ -25,6 +26,7 @@ const routeDepth: Record<string, number> = {
   "/tarot": 1,
   "/compliment": 1,
   "/meme": 1,
+  "/mbti": 1,
 };
 
 const App: React.FC = () => {
@@ -127,6 +129,15 @@ const App: React.FC = () => {
           "表情包制作, 梗图生成器, AI表情包, 斗图神器, 图片编辑, 趣味文字, 热门表情包, 熊猫头, 蘑菇头, 聊天斗图",
       };
     }
+    if (pathname.startsWith("/mbti")) {
+      return {
+        title: "喵BTI - 读懂喵心声，MBTI 聊天军师",
+        description:
+          "根据 MBTI 人格分析对方潜台词，提供高情商回复建议。你的专属情感聊天助手。",
+        keywords:
+          "MBTI, 聊天助手, 情感分析, 高情商回复, 恋爱话术",
+      };
+    }
     return {
       title: "呼噜呼噜事务所 - 您的治愈系AI趣味生活助手",
       description:
@@ -173,6 +184,7 @@ const App: React.FC = () => {
                       onSelectTarot={() => navigate("/tarot")}
                       onSelectCompliment={() => navigate("/compliment")}
                       onSelectMeme={() => navigate("/meme")}
+                      onSelectMBTI={() => navigate("/mbti")}
                     />
                   }
                 />
@@ -194,6 +206,7 @@ const App: React.FC = () => {
                   element={<ComplimentApp onBack={handleBack} />}
                 />
                 <Route path="/meme" element={<MemeApp />} />
+                <Route path="/mbti" element={<MeowBTIApp />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
@@ -216,6 +229,7 @@ const App: React.FC = () => {
                     onSelectTarot={() => navigate("/tarot")}
                     onSelectCompliment={() => navigate("/compliment")}
                     onSelectMeme={() => navigate("/meme")}
+                    onSelectMBTI={() => navigate("/mbti")}
                   />
                 }
               />
@@ -234,6 +248,7 @@ const App: React.FC = () => {
                 element={<ComplimentApp onBack={handleBack} />}
               />
               <Route path="/meme" element={<MemeApp />} />
+              <Route path="/mbti" element={<MeowBTIApp />} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />

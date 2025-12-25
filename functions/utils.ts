@@ -11,6 +11,7 @@ export * from "./services/xiaohongshu";
 export * from "./services/maoyan";
 export * from "./services/compliment";
 export * from "./services/ai";
+export * from "./services/mbti";
 
 // Re-export common utils
 export * from "./utils/common";

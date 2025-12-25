@@ -67,3 +67,28 @@ export interface ComplimentStyle {
   tags?: string[];
   source?: string[];
 }
+
+export type MBTIType = 
+  | "INTJ" | "INTP" | "ENTJ" | "ENTP"
+  | "INFJ" | "INFP" | "ENFJ" | "ENFP"
+  | "ISTJ" | "ISFJ" | "ESTJ" | "ESFJ"
+  | "ISTP" | "ISFP" | "ESTP" | "ESFP";
+
+export interface MessageAnalysis {
+  mbtiLogic: string;
+}
+
+export interface ScoreChange {
+  from: number;
+  to: number;
+  diff: number;
+}
+
+export interface ReplySuggestion {
+  originalReply: string;
+  reactionToOriginal: string;
+  optimizedReply: string;
+  reactionToOptimized: string;
+  briefAnalysis: string;
+  scoreChange: ScoreChange;
+}
