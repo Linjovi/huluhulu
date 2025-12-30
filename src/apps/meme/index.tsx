@@ -12,61 +12,69 @@ type MemeType = 1 | 2 | 3; // 1: 9-grid, 2: Expression Transfer, 3: GIF
 
 // Helper function to crop 4x4 sprite sheet into frames
 const sliceSpriteSheet = (imgUrl: string): Promise<string[]> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "Anonymous";
-        img.onload = () => {
-            const frames: string[] = [];
-            const rows = 4;
-            const cols = 4;
-            const frameWidth = img.width / cols;
-            const frameHeight = img.height / rows;
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+      const frames: string[] = [];
+      const rows = 4;
+      const cols = 4;
+      const frameWidth = img.width / cols;
+      const frameHeight = img.height / rows;
 
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    const canvas = document.createElement("canvas");
-                    canvas.width = frameWidth;
-                    canvas.height = frameHeight;
-                    const ctx = canvas.getContext("2d");
-                    if (ctx) {
-                        ctx.drawImage(
-                            img,
-                            c * frameWidth, r * frameHeight, frameWidth, frameHeight,
-                            0, 0, frameWidth, frameHeight
-                        );
-                        frames.push(canvas.toDataURL("image/png"));
-                    }
-                }
-            }
-            resolve(frames);
-        };
-        img.onerror = (err) => reject(err);
-        img.src = imgUrl;
-    });
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const canvas = document.createElement("canvas");
+          canvas.width = frameWidth;
+          canvas.height = frameHeight;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(
+              img,
+              c * frameWidth,
+              r * frameHeight,
+              frameWidth,
+              frameHeight,
+              0,
+              0,
+              frameWidth,
+              frameHeight
+            );
+            frames.push(canvas.toDataURL("image/png"));
+          }
+        }
+      }
+      resolve(frames);
+    };
+    img.onerror = (err) => reject(err);
+    img.src = imgUrl;
+  });
 };
 
 const createGif = (frames: string[], fps: number): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        // gifshot expects interval in seconds per frame
-        // fps = frames per second. interval = 1 / fps
-        const interval = 1 / fps;
-        
-        gifshot.createGIF({
-            images: frames,
-            interval: interval, 
-            gifWidth: 400, // Reasonable default size
-            gifHeight: 400,
-            numFrames: frames.length,
-        }, (obj: any) => {
-            if (!obj.error) {
-                resolve(obj.image);
-            } else {
-                reject(obj.errorMsg);
-            }
-        });
-    });
-};
+  return new Promise((resolve, reject) => {
+    // gifshot expects interval in seconds per frame
+    // fps = frames per second. interval = 1 / fps
+    const interval = 1 / fps;
 
+    gifshot.createGIF(
+      {
+        images: frames,
+        interval: interval,
+        gifWidth: 400, // Reasonable default size
+        gifHeight: 400,
+        numFrames: frames.length,
+      },
+      (obj: any) => {
+        if (!obj.error) {
+          resolve(obj.image);
+        } else {
+          reject(obj.errorMsg);
+        }
+      }
+    );
+  });
+};
 
 const MemeApp: React.FC = () => {
   const navigate = useNavigate();
@@ -80,13 +88,99 @@ const MemeApp: React.FC = () => {
   const [gifPrompt, setGifPrompt] = useState(""); // For Type 3
   const [fps, setFps] = useState(8); // Default FPS for Type 3
 
-  const [style, setStyle] = useState<StyleType>("cartoon");
+  const [style, setStyle] = useState<StyleType>("realistic");
   const [description, setDescription] = useState(""); // For Type 1 description
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [generatedFrames, setGeneratedFrames] = useState<string[] | null>(null); // Store frames for FPS adjustment
   const [error, setError] = useState<string | null>(null);
+
+  // Check for pending task on mount
+  useEffect(() => {
+    const checkPendingTask = async () => {
+      const storedTask = localStorage.getItem("huluhulu_meme_task");
+      if (!storedTask) return;
+
+      try {
+        const { id, type, timestamp, image: savedImage, refImage: savedRefImage } = JSON.parse(storedTask);
+        // Expire after 1 hour (optional, but good practice)
+        if (Date.now() - timestamp > 60 * 60 * 1000) {
+          localStorage.removeItem("huluhulu_meme_task");
+          return;
+        }
+
+        // Restore context
+        setActiveTab(type);
+        if (savedImage) setImage(savedImage);
+        if (savedRefImage) setRefImage(savedRefImage);
+        
+        setLoading(true);
+        setProgress(50); // Show some progress
+
+        // Poll for result
+        await pollTask(id, type);
+      } catch (e) {
+        console.error("Error checking pending task:", e);
+        localStorage.removeItem("huluhulu_meme_task");
+      }
+    };
+
+    checkPendingTask();
+  }, []);
+
+  const pollTask = async (id: string, type: MemeType) => {
+    try {
+      const res = await fetch(`/api/meme-result?id=${id}`);
+      const data = await res.json();
+
+      if (data.code !== 0) {
+        throw new Error(data.message || "查询任务失败");
+      }
+
+      const taskData = data.data?.data || data.data; // Handle nested data structure if present, or flat
+      // Structure: { id, results: [{url}], status, progress, ... }
+      
+      if (taskData.status === "succeeded") {
+         // Handle success
+         if (taskData.results && taskData.results.length > 0 && taskData.results[0].url) {
+            const url = taskData.results[0].url;
+            
+            if (type === 3) {
+                // For GIF, we need to process the sprite sheet
+                try {
+                  const frames = await sliceSpriteSheet(url);
+                  setGeneratedFrames(frames);
+                  const gifDataUrl = await createGif(frames, fps);
+                  setGeneratedImage(gifDataUrl);
+                } catch (e) {
+                   console.error("Failed to process restored GIF", e);
+                   setError("动图处理失败了喵~");
+                }
+            } else {
+                setGeneratedImage(url);
+            }
+         }
+         localStorage.removeItem("huluhulu_meme_task");
+         setLoading(false);
+         setProgress(100);
+      } else if (taskData.status === "failed") {
+         localStorage.removeItem("huluhulu_meme_task");
+         throw new Error(taskData.failure_reason || "任务失败了喵~");
+      } else {
+         // Running / Pending
+         if (taskData.progress) {
+            setProgress(taskData.progress);
+         }
+         // Poll again in 2 seconds
+         setTimeout(() => pollTask(id, type), 2000);
+      }
+    } catch (e: any) {
+        setError(e.message || "恢复任务失败了喵~");
+        setLoading(false);
+        localStorage.removeItem("huluhulu_meme_task");
+    }
+  };
 
   // Auto-scroll to result when generated
   useEffect(() => {
@@ -146,8 +240,8 @@ const MemeApp: React.FC = () => {
       return;
     }
     if (activeTab === 3 && !gifPrompt.trim()) {
-        setError("请输入想要生成的动作喵~");
-        return;
+      setError("请输入想要生成的动作喵~");
+      return;
     }
 
     setLoading(true);
@@ -158,7 +252,7 @@ const MemeApp: React.FC = () => {
 
     let hasResult = false;
     let spriteSheetUrl: string | null = null;
-    let spriteSheetBase64: string | null = null;
+    // let spriteSheetBase64: string | null = null; // Removed
 
     try {
       const response = await fetch("/api/meme-generate", {
@@ -199,13 +293,27 @@ const MemeApp: React.FC = () => {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
+            if (line.startsWith("data: ")) {
             const jsonStr = line.slice(6).trim();
-            if (jsonStr === "[DONE]") break;
+            if (jsonStr === "[DONE]") {
+                localStorage.removeItem("huluhulu_meme_task"); // Clean up on normal finish
+                break;
+            }
             if (!jsonStr) continue;
 
             try {
               const data = JSON.parse(jsonStr);
+              
+              // Save task ID for recovery
+              if (data.id) {
+                 localStorage.setItem("huluhulu_meme_task", JSON.stringify({
+                    id: data.id,
+                    type: activeTab,
+                    image, // Save current images to context
+                    refImage: activeTab === 2 ? refImage : undefined,
+                    timestamp: Date.now()
+                 }));
+              }
 
               if (data.status === "running") {
                 if (data.progress) {
@@ -217,25 +325,11 @@ const MemeApp: React.FC = () => {
                   data.results.length > 0 &&
                   data.results[0].url
                 ) {
-                   if (activeTab === 3) {
-                       spriteSheetUrl = data.results[0].url;
-                   } else {
-                       setGeneratedImage(data.results[0].url);
-                   }
-                   hasResult = true;
-                } else if (data.base64Image) {
                   if (activeTab === 3) {
-                      spriteSheetBase64 = `data:image/jpeg;base64,${data.base64Image}`;
+                    spriteSheetUrl = data.results[0].url;
                   } else {
-                      setGeneratedImage(`data:image/jpeg;base64,${data.base64Image}`);
+                    setGeneratedImage(data.results[0].url);
                   }
-                  hasResult = true;
-                } else if (data.data?.base64Image) {
-                   if (activeTab === 3) {
-                       spriteSheetBase64 = `data:image/jpeg;base64,${data.data.base64Image}`;
-                   } else {
-                       setGeneratedImage(`data:image/jpeg;base64,${data.data.base64Image}`);
-                   }
                   hasResult = true;
                 }
                 setProgress(100);
@@ -244,23 +338,7 @@ const MemeApp: React.FC = () => {
               }
 
               if (!hasResult) {
-                if (data.base64Image) {
-                  if (activeTab === 3) {
-                       spriteSheetBase64 = `data:image/jpeg;base64,${data.base64Image}`;
-                   } else {
-                       setGeneratedImage(`data:image/jpeg;base64,${data.base64Image}`);
-                   }
-                  hasResult = true;
-                  setProgress(100);
-                } else if (data.data?.base64Image) {
-                   if (activeTab === 3) {
-                       spriteSheetBase64 = `data:image/jpeg;base64,${data.data.base64Image}`;
-                   } else {
-                       setGeneratedImage(`data:image/jpeg;base64,${data.data.base64Image}`);
-                   }
-                  hasResult = true;
-                  setProgress(100);
-                }
+                 // No fallback needed as interface guarantees URL
               }
             } catch (e) {
               console.error("Error parsing stream data", e);
@@ -272,24 +350,25 @@ const MemeApp: React.FC = () => {
       if (!hasResult) {
         throw new Error("生成失败，未获取到结果喵~");
       }
+      
+      localStorage.removeItem("huluhulu_meme_task"); // Clean up on success
 
       // If Type 3, process the sprite sheet into a GIF
       if (activeTab === 3 && hasResult) {
-          const source = spriteSheetUrl || spriteSheetBase64;
-          if (source) {
-              setProgress(100); // Ensure progress shows full while processing GIF
-              try {
-                  const frames = await sliceSpriteSheet(source);
-                  setGeneratedFrames(frames); // Save frames for FPS adjustment
-                  const gifDataUrl = await createGif(frames, fps);
-                  setGeneratedImage(gifDataUrl);
-              } catch (gifErr) {
-                  console.error("GIF creation error:", gifErr);
-                  throw new Error("动图合成失败了喵~");
-              }
+        const source = spriteSheetUrl;
+        if (source) {
+          setProgress(100); // Ensure progress shows full while processing GIF
+          try {
+            const frames = await sliceSpriteSheet(source);
+            setGeneratedFrames(frames); // Save frames for FPS adjustment
+            const gifDataUrl = await createGif(frames, fps);
+            setGeneratedImage(gifDataUrl);
+          } catch (gifErr) {
+            console.error("GIF creation error:", gifErr);
+            throw new Error("动图合成失败了喵~");
           }
+        }
       }
-
     } catch (err: any) {
       setError(err.message || "网络出了点小差错，请稍后再试喵~");
     } finally {
@@ -430,16 +509,12 @@ const MemeApp: React.FC = () => {
             ) : (
               <Sparkles className="w-5 h-5" />
             )}
-            {loading
-              ? "制作中..."
-              : activeTab === 3
-              ? "生成动图"
-              : "立即生成"}
+            {loading ? "制作中..." : activeTab === 3 ? "生成动图" : "立即生成"}
           </button>
 
           {/* Result Section (Shows below button) */}
           {generatedImage && (
-            <div 
+            <div
               ref={resultRef}
               className="flex flex-col space-y-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500"
             >

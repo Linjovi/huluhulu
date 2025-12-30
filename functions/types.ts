@@ -59,6 +59,7 @@ export interface Env {
   GOOGLE_API_KEY: string;
   GRSAI_API_KEY: string;
   GRSAI_BASE_URL?: string;
+  MEME_BACKUP_BUCKET?: any;
 }
 
 export interface ComplimentStyle {

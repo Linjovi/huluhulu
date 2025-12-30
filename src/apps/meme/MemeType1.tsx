@@ -53,17 +53,6 @@ export const MemeType1: React.FC<MemeType1Props> = ({
         </label>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => setStyle("cartoon")}
-            className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-              style === "cartoon"
-                ? "border-green-500 bg-green-50 text-green-700"
-                : "border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100"
-            }`}
-          >
-            <span className="text-2xl">🎨</span>
-            <span className="font-bold text-sm">卡通版</span>
-          </button>
-          <button
             onClick={() => setStyle("realistic")}
             className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
               style === "realistic"
@@ -73,6 +62,17 @@ export const MemeType1: React.FC<MemeType1Props> = ({
           >
             <span className="text-2xl">📸</span>
             <span className="font-bold text-sm">写实版</span>
+          </button>
+          <button
+            onClick={() => setStyle("cartoon")}
+            className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+              style === "cartoon"
+                ? "border-green-500 bg-green-50 text-green-700"
+                : "border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100"
+            }`}
+          >
+            <span className="text-2xl">🎨</span>
+            <span className="font-bold text-sm">卡通版</span>
           </button>
         </div>
       </div>
@@ -95,4 +95,3 @@ export const MemeType1: React.FC<MemeType1Props> = ({
     </div>
   );
 };
-
