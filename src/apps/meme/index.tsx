@@ -103,7 +103,13 @@ const MemeApp: React.FC = () => {
       if (!storedTask) return;
 
       try {
-        const { id, type, timestamp, image: savedImage, refImage: savedRefImage } = JSON.parse(storedTask);
+        const {
+          id,
+          type,
+          timestamp,
+          image: savedImage,
+          refImage: savedRefImage,
+        } = JSON.parse(storedTask);
         // Expire after 1 hour (optional, but good practice)
         if (Date.now() - timestamp > 60 * 60 * 1000) {
           localStorage.removeItem("huluhulu_meme_task");
@@ -114,7 +120,7 @@ const MemeApp: React.FC = () => {
         setActiveTab(type);
         if (savedImage) setImage(savedImage);
         if (savedRefImage) setRefImage(savedRefImage);
-        
+
         setLoading(true);
         setProgress(50); // Show some progress
 
@@ -140,45 +146,49 @@ const MemeApp: React.FC = () => {
 
       const taskData = data.data?.data || data.data; // Handle nested data structure if present, or flat
       // Structure: { id, results: [{url}], status, progress, ... }
-      
+
       if (taskData.status === "succeeded") {
-         // Handle success
-         if (taskData.results && taskData.results.length > 0 && taskData.results[0].url) {
-            const url = taskData.results[0].url;
-            
-            if (type === 3) {
-                // For GIF, we need to process the sprite sheet
-                try {
-                  const frames = await sliceSpriteSheet(url);
-                  setGeneratedFrames(frames);
-                  const gifDataUrl = await createGif(frames, fps);
-                  setGeneratedImage(gifDataUrl);
-                } catch (e) {
-                   console.error("Failed to process restored GIF", e);
-                   setError("动图处理失败了喵~");
-                }
-            } else {
-                setGeneratedImage(url);
+        // Handle success
+        if (
+          taskData.results &&
+          taskData.results.length > 0 &&
+          taskData.results[0].url
+        ) {
+          const url = taskData.results[0].url;
+
+          if (type === 3) {
+            // For GIF, we need to process the sprite sheet
+            try {
+              const frames = await sliceSpriteSheet(url);
+              setGeneratedFrames(frames);
+              const gifDataUrl = await createGif(frames, fps);
+              setGeneratedImage(gifDataUrl);
+            } catch (e) {
+              console.error("Failed to process restored GIF", e);
+              setError("动图处理失败了喵~");
             }
-         }
-         localStorage.removeItem("huluhulu_meme_task");
-         setLoading(false);
-         setProgress(100);
+          } else {
+            setGeneratedImage(url);
+          }
+        }
+        localStorage.removeItem("huluhulu_meme_task");
+        setLoading(false);
+        setProgress(100);
       } else if (taskData.status === "failed") {
-         localStorage.removeItem("huluhulu_meme_task");
-         throw new Error(taskData.failure_reason || "任务失败了喵~");
+        localStorage.removeItem("huluhulu_meme_task");
+        throw new Error(taskData.failure_reason || "任务失败了喵~");
       } else {
-         // Running / Pending
-         if (taskData.progress) {
-            setProgress(taskData.progress);
-         }
-         // Poll again in 2 seconds
-         setTimeout(() => pollTask(id, type), 2000);
+        // Running / Pending
+        if (taskData.progress) {
+          setProgress(taskData.progress);
+        }
+        // Poll again in 2 seconds
+        setTimeout(() => pollTask(id, type), 2000);
       }
     } catch (e: any) {
-        setError(e.message || "恢复任务失败了喵~");
-        setLoading(false);
-        localStorage.removeItem("huluhulu_meme_task");
+      setError(e.message || "恢复任务失败了喵~");
+      setLoading(false);
+      localStorage.removeItem("huluhulu_meme_task");
     }
   };
 
@@ -293,26 +303,29 @@ const MemeApp: React.FC = () => {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-            if (line.startsWith("data: ")) {
+          if (line.startsWith("data: ")) {
             const jsonStr = line.slice(6).trim();
             if (jsonStr === "[DONE]") {
-                localStorage.removeItem("huluhulu_meme_task"); // Clean up on normal finish
-                break;
+              localStorage.removeItem("huluhulu_meme_task"); // Clean up on normal finish
+              break;
             }
             if (!jsonStr) continue;
 
             try {
               const data = JSON.parse(jsonStr);
-              
+
               // Save task ID for recovery
               if (data.id) {
-                 localStorage.setItem("huluhulu_meme_task", JSON.stringify({
+                localStorage.setItem(
+                  "huluhulu_meme_task",
+                  JSON.stringify({
                     id: data.id,
                     type: activeTab,
                     image, // Save current images to context
                     refImage: activeTab === 2 ? refImage : undefined,
-                    timestamp: Date.now()
-                 }));
+                    timestamp: Date.now(),
+                  })
+                );
               }
 
               if (data.status === "running") {
@@ -338,7 +351,7 @@ const MemeApp: React.FC = () => {
               }
 
               if (!hasResult) {
-                 // No fallback needed as interface guarantees URL
+                // No fallback needed as interface guarantees URL
               }
             } catch (e) {
               console.error("Error parsing stream data", e);
@@ -350,7 +363,7 @@ const MemeApp: React.FC = () => {
       if (!hasResult) {
         throw new Error("生成失败，未获取到结果喵~");
       }
-      
+
       localStorage.removeItem("huluhulu_meme_task"); // Clean up on success
 
       // If Type 3, process the sprite sheet into a GIF
@@ -404,13 +417,7 @@ const MemeApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-green-50 flex flex-col">
       <div className="bg-white/80 backdrop-blur-md sticky top-0 z-20 px-4 py-3 shadow-sm flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-        >
-          <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
-        </button>
-        <span className="font-bold text-lg text-gray-800">表情包生成器</span>
+        表情包生成器
       </div>
 
       <div className="flex-1 flex flex-col p-4 max-w-lg mx-auto w-full">
