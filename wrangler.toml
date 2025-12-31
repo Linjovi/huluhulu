@@ -4,3 +4,11 @@ compatibility_date = "2024-01-01"
 [[r2_buckets]]
 binding = "MEME_BACKUP_BUCKET"
 bucket_name = "huluhulu"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "huluhulu"
+database_id = "160f5cb6-fe37-44d7-877b-c89d3288ecca"
+
+[triggers]
+crons = ["0 2 * * *", "0 10 * * *"]

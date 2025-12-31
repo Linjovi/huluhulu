@@ -60,6 +60,7 @@ export interface Env {
   GRSAI_API_KEY: string;
   GRSAI_BASE_URL?: string;
   MEME_BACKUP_BUCKET?: any;
+  DB?: any; // D1 Database binding
 }
 
 export interface PhotographyStyle {

@@ -1,11 +1,10 @@
-import { PhotographyStyle } from "../types";
-import { CACHE, CACHE_DURATION } from "../cache";
+import { PhotographyStyle, Env } from "../types";
+import { CACHE } from "../cache";
 import {
   getDouyinHotSearch,
   getXiaohongshuHotSearch,
   createDeepSeekClient,
   safeParseJSON,
-  generatePhotographyPrompt,
 } from "../utils";
 
 export const DEFAULT_STYLES: Record<string, string> = {
@@ -20,7 +19,7 @@ export const DEFAULT_STYLES: Record<string, string> = {
 };
 
 /**
- * 核心逻辑：获取热搜 -> 提取主题 -> 生成提示词 -> 更新缓存
+ * Update logic: Fetch hot searches -> Summarize themes -> Generate prompts -> Save to D1 & Cache
  */
 export async function refreshStyles(context: any) {
   try {
@@ -36,18 +35,19 @@ export async function refreshStyles(context: any) {
 
     const client = createDeepSeekClient(context.env);
 
-    // Step 1: Select Titles
+    // Step 1: Select Titles (Themes)
     const selectionCompletion = await client.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `你是一个专业的视觉风格分析师。
-任务：分析提供的热搜标题，提炼出适合作为“AI写真/修图/换装”的风格主题。
+          content: `你是一个专业的AI视觉潮流分析师。
+任务：分析热搜词，提炼出适合作为“AI写真”或“照片修图模板”的风格主题。
 要求：
-1. 不要直接返回热搜原标题，而是归纳总结成简短的主题名称（如：“清冷感财阀千金”、“赛博朋克风”、“法式复古胶片”等）。
-2. 只选择与妆容、穿搭、氛围、摄影、二次元相关的内容。
-3. 严格返回 JSON 对象：{"items": [{"title": "主题名称", "source": ["来源热搜词1", "来源热搜词2"]}]}
-4. 返回 6-10 个最热门且适合的主题。
+1. **风格化**：主题应具有明确的视觉风格（如：妆容风格、穿搭风格、滤镜氛围、摄影质感）。
+2. **易于理解**：使用用户易懂的词汇（如：“清冷感财阀千金”、“美拉德风”、“赛博朋克”、“法式复古”）。
+3. **关联热搜**：必须基于提供的热搜词进行归纳。
+4. **格式**：严格返回 JSON 对象：{"items": [{"title": "主题名称", "source": ["来源热搜词1"]}]}
+5. **数量**：精选 6-10 个最热门且适合修图的主题。
 `,
         },
         {
@@ -71,8 +71,8 @@ export async function refreshStyles(context: any) {
       : parsedSelection.titles || parsedSelection.list || [];
 
     if (Array.isArray(selectedTitles) && selectedTitles.length > 0) {
-      // Initialize styles with empty prompts first
-      const styles: PhotographyStyle[] = selectedTitles.map((item: any) => {
+      // Initialize styles
+      let styles: PhotographyStyle[] = selectedTitles.map((item: any) => {
         if (typeof item === "string") {
           return { title: item, prompt: "" };
         }
@@ -83,42 +83,153 @@ export async function refreshStyles(context: any) {
         };
       });
 
-      // Update Cache immediately with titles
-      setPhotographyStylesCache(styles);
-
-      // Step 2: Generate Prompts (Sequential or Parallel)
+      // Step 2: Generate Editing Prompts
       console.log(
-        "Generating prompts for:",
+        "Generating editing prompts for:",
         styles.map((s) => s.title)
       );
 
-      for (const styleItem of styles) {
+      const promptPromises = styles.map(async (styleItem) => {
         try {
-          // Use title (which is the theme name) for prompt generation
-          const prompt = await generatePhotographyPrompt(
+          const prompt = await generateEditingPrompt(
             client,
-            styleItem.title,
-            1.1
+            styleItem.title
           );
-          if (prompt) {
-            updatePhotographyStylesCache({
-              title: styleItem.title,
-              prompt: prompt,
-            });
-          }
+          return { ...styleItem, prompt: prompt || "" };
         } catch (err) {
           console.error(`Prompt gen error for ${styleItem.title}:`, err);
+          return styleItem;
         }
-      }
+      });
+
+      styles = await Promise.all(promptPromises);
+      
+      // Save to Storage (D1 + Memory)
+      await savePhotographyStyles(context, styles);
+      
       console.log("Refresh completed.");
+      return styles;
     }
   } catch (error) {
     console.error("refreshStyles Error:", error);
+    throw error;
+  }
+  return [];
+}
+
+/**
+ * Specialized prompt generator for Photo Editing / Style Transfer
+ */
+async function generateEditingPrompt(client: any, title: string): Promise<string | null> {
+  const systemContent = `你是一个精通 AI 绘画与修图的提示词专家。
+任务：为主题“${title}”编写一段适用于 **图生图 (img2img)** 或 **AI 写真** 的英文提示词 (Prompt)。
+目标：将用户上传的照片转换为该主题风格，同时保留人物主要特征。
+
+要求：
+1. **画面描述**：包含光影（Lighting）、色彩（Color Palette）、氛围（Atmosphere）、材质（Texture）和摄影风格（Photography Style）。
+2. **高质量词汇**：包含 "Masterpiece", "Best Quality", "High Resolution", "4k", "Detailed" 等。
+3. **内容克制**：**不要**描述具体的人物动作或构图（因为是修图，要跟随原图），只描述风格元素。例如不要写 "A girl sitting"，而是写 "Cinematic lighting, vintage film grain, soft focus, pastel colors"。
+4. **输出格式**：直接输出英文提示词，不要包含任何前缀、解释或中文。逗号分隔。
+
+示例：
+主题：复古港风
+输出：Hong Kong cinema style, vintage film look, warm heavy tones, soft diffusion blur, nostalgic atmosphere, 90s fashion vibe, film grain, masterpiece, high quality, 4k.
+`;
+
+  try {
+    const completion = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: systemContent },
+        { role: "user", content: "Generate prompt." },
+      ],
+      model: "deepseek-chat",
+      temperature: 1.1,
+      thinking: { type: "enabled" },
+    } as any);
+
+    return completion.choices[0].message.content?.trim() || null;
+  } catch (err) {
+    console.error("Editing Prompt Generation Error:", err);
+    return null;
   }
 }
 
+/**
+ * Get styles from Memory -> D1 -> null
+ */
+export async function getStoredPhotographyStyles(context: { env: Env }): Promise<PhotographyStyle[] | null> {
+  // 1. Try Memory Cache
+  const memoryStyles = getPhotographyStylesCache();
+  if (memoryStyles) {
+    return memoryStyles;
+  }
+
+  // 2. Try D1 Storage
+  if (context.env.DB) {
+    try {
+      // Find the latest batch_id
+      const latestBatch = await context.env.DB.prepare(
+        "SELECT batch_id FROM photography_styles ORDER BY created_at DESC LIMIT 1"
+      ).first();
+
+      if (latestBatch && latestBatch.batch_id) {
+        // Fetch all styles for this batch
+        const results = await context.env.DB.prepare(
+          "SELECT title, source, prompt FROM photography_styles WHERE batch_id = ?"
+        )
+        .bind(latestBatch.batch_id)
+        .all();
+
+        if (results && results.results.length > 0) {
+          const styles: PhotographyStyle[] = results.results.map((row: any) => ({
+            title: row.title,
+            prompt: row.prompt,
+            source: row.source ? JSON.parse(row.source) : [],
+          }));
+          
+          // Update memory cache
+          setPhotographyStylesCache(styles);
+          return styles;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to read from D1:", e);
+    }
+  }
+
+  return null;
+}
+
+export async function savePhotographyStyles(context: { env: Env }, styles: PhotographyStyle[]) {
+  // 1. Update Memory
+  setPhotographyStylesCache(styles);
+
+  // 2. Update D1
+  if (context.env.DB) {
+    const batchId = Date.now().toString();
+    const stmts = styles.map((style) => {
+      return context.env.DB.prepare(
+        "INSERT INTO photography_styles (batch_id, title, source, prompt) VALUES (?, ?, ?, ?)"
+      ).bind(
+        batchId,
+        style.title,
+        JSON.stringify(style.source || []),
+        style.prompt
+      );
+    });
+
+    try {
+      await context.env.DB.batch(stmts);
+      console.log(`Saved ${styles.length} styles to D1 with batch_id ${batchId}`);
+    } catch (e) {
+      console.error("Failed to write batch to D1:", e);
+    }
+  }
+}
+
+// In-Memory Cache Helpers
+
 export function setPhotographyStylesCache(styles: PhotographyStyle[]) {
-  console.log("Setting photography styles cache:", styles);
   CACHE.photographyStyles = {
     data: styles,
     timestamp: Date.now(),
@@ -126,7 +237,6 @@ export function setPhotographyStylesCache(styles: PhotographyStyle[]) {
 }
 
 export function updatePhotographyStylesCache(style: PhotographyStyle) {
-  console.log("Updating photography styles cache:", style);
   if (CACHE.photographyStyles) {
     const index = CACHE.photographyStyles.data.findIndex(
       (s) => s.title === style.title
@@ -146,19 +256,15 @@ export function updatePhotographyStylesCache(style: PhotographyStyle) {
 
 export function getPhotographyStylesCache() {
   if (CACHE.photographyStyles) {
-    // Ignore CACHE_DURATION, return data until next update overwrite it
     return CACHE.photographyStyles.data;
   }
   return null;
 }
 
 export function getPhotographyStylePrompt(title: string): string | null {
-  // Check default styles first
   if (DEFAULT_STYLES[title]) {
     return DEFAULT_STYLES[title];
   }
-
-  // Check if cache exists and not expired (though logic for reading expired might be acceptable if strict consistency isn't needed)
   if (CACHE.photographyStyles) {
     const style = CACHE.photographyStyles.data.find(
       (s) =>

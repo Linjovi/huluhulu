@@ -9,7 +9,7 @@ export * from "./services/weibo";
 export * from "./services/douyin";
 export * from "./services/xiaohongshu";
 export * from "./services/maoyan";
-export * from "./services/compliment";
+export * from "./services/photography";
 export * from "./services/ai";
 export * from "./services/mbti";
 
