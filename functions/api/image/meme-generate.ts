@@ -1,4 +1,7 @@
-import { streamImageGeneration, createErrorResponse } from "../../services/image-generation";
+import {
+  streamImageGeneration,
+  createErrorResponse,
+} from "../../services/image-generation";
 
 export async function onRequestPost(context: any) {
   const req = context.request;
@@ -42,13 +45,13 @@ export async function onRequestPost(context: any) {
         return createErrorResponse(400, "Type 2 生成需要提供参考图 (refImage)");
       }
       // Prompt for expression transfer
-      prompt = `Keep the character/subject from the first image exactly as is, but make them perform the facial expression and pose shown in the second image. High quality, expressive, meme style. No text in image.`;
+      prompt = `Using the character from the first image as the subject, recreate the exact facial expression and head pose shown in the second image. Strictly copy the eye openness and mouth shape from the second image. Keep the character's identity and appearance from the first image. High quality. No text.`;
       urls = [image, refImage];
     } else if (type === 3) {
       // Type 3: GIF
       model = "nano-banana-pro";
-      const action = gifPrompt || "吐一下舌头";
-      prompt = `为我生成图中角色的GIF表情包每一帧的图片。 使用 4行x4列 布局共生成16个小图片。16个小图片为“${action}”动作的连贯的拆分动作，使用这16张可以组成一个完整的、循环动画，动作流畅逼真，最后一帧应流畅地循环回到第一帧。16个小图片的边缘不要增加间距，每张图片都不要超出自己的区域。 不要画分割线。`;
+      const action = gifPrompt;
+      prompt = `为我生成图中角色的GIF表情包每一帧的图片。使用 4行x4列 布局共生成16个小图片。16个小图片为“${action}”动作的连贯的拆分动作，使用这16张可以组成一个完整的、循环动画，动作流畅逼真，最后一帧应流畅地循环回到第一帧。动作制作一次，不要重复。16个小图片的边缘不要增加间距，每张图片都不要超出自己的区域。不要画分割线。`;
     } else {
       return createErrorResponse(400, "不支持的 type 类型");
     }
@@ -64,32 +67,44 @@ export async function onRequestPost(context: any) {
 
     // Backup Callback
     const handleBackup = async (data: any) => {
-        if (context.env.MEME_BACKUP_BUCKET && data.results && data.results.length > 0 && data.results[0].url) {
-            try {
-                const imageUrl = data.results[0].url;
-                const remoteId = data.id;
-                let body: ArrayBuffer | Uint8Array | null = null;
-                const imgRes = await fetch(imageUrl);
-                if (imgRes.ok) {
-                    body = await imgRes.arrayBuffer();
-                }
+      if (
+        context.env.MEME_BACKUP_BUCKET &&
+        data.results &&
+        data.results.length > 0 &&
+        data.results[0].url
+      ) {
+        try {
+          const imageUrl = data.results[0].url;
+          const remoteId = data.id;
+          let body: ArrayBuffer | Uint8Array | null = null;
+          const imgRes = await fetch(imageUrl);
+          if (imgRes.ok) {
+            body = await imgRes.arrayBuffer();
+          }
 
-                if (body) {
-                    const id = remoteId || crypto.randomUUID();
-                    const key = `meme/${id}.png`;
-                    await context.env.MEME_BACKUP_BUCKET.put(key, body);
-                    console.log(`[Backup] Uploaded to R2: ${key}`);
-                }
-            } catch (e) {
-                console.error("[Backup] Failed to upload to R2:", e);
-            }
+          if (body) {
+            const id = remoteId || crypto.randomUUID();
+            const key = `meme/${id}.png`;
+            await context.env.MEME_BACKUP_BUCKET.put(key, body);
+            console.log(`[Backup] Uploaded to R2: ${key}`);
+          }
+        } catch (e) {
+          console.error("[Backup] Failed to upload to R2:", e);
         }
+      }
     };
 
-    return streamImageGeneration(context, "/v1/draw/nano-banana", payload, handleBackup);
-
+    return streamImageGeneration(
+      context,
+      "/v1/draw/nano-banana",
+      payload,
+      handleBackup
+    );
   } catch (error: any) {
     console.error("Meme Gen API Error:", error);
-    return createErrorResponse(500, error.message || "表情包生成出错了，稍后再试喵~");
+    return createErrorResponse(
+      500,
+      error.message || "表情包生成出错了，稍后再试喵~"
+    );
   }
 }
