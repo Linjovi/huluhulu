@@ -7,16 +7,16 @@ const AUTH_COOKIE_NAME = 'blog_auth_verified';
 
 // 日记详情类型
 interface DiaryDetail {
-  id: string;
-  date: string;
-  content: string;
+  date: string;  // 日期ID，格式：YYYYMMDD
+  content: string;  // 纯文本内容
 }
 
-// 格式化日期
+// 格式化日期 (YYYYMMDD -> X月X日 周X)
 const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
+  const year = parseInt(dateStr.slice(0, 4));
+  const month = parseInt(dateStr.slice(4, 6));
+  const day = parseInt(dateStr.slice(6, 8));
+  const date = new Date(year, month - 1, day);
   const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
   const weekday = weekdays[date.getDay()];
   return `${month}月${day}日 ${weekday}`;
@@ -160,13 +160,14 @@ const DiaryDetailPage: React.FC<{ id: string }> = ({ id }) => {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch(`/diary/content/${id}.json`)
+    // id 就是日期，如 20260307
+    fetch(`/diary/content/${id}.txt`)
       .then(res => {
         if (!res.ok) throw new Error('Not found');
-        return res.json();
+        return res.text();
       })
-      .then(data => {
-        setDiary(data);
+      .then(content => {
+        setDiary({ date: id, content });
         setLoading(false);
       })
       .catch(() => {
@@ -213,7 +214,7 @@ const DiaryDetailPage: React.FC<{ id: string }> = ({ id }) => {
 
       {/* 内容 */}
       <DiaryContent 
-        htmlContent={diary.content} 
+        textContent={diary.content} 
         className="text-teal-600 leading-loose text-lg font-light"
       />
     </article>

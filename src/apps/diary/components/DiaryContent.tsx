@@ -1,39 +1,38 @@
 import React, { useMemo } from 'react';
 import { DiaryBlock } from '../types';
-import { safeParseHtmlToBlocks } from '../utils/parseHtmlToBlocks';
+import { safeParseTextToBlocks } from '../utils/parseTextToBlocks';
 import { DiaryBlockRenderer } from './DiaryBlockRenderer';
 import { useScrollAnimationBatch, getAnimationStyle } from '../hooks/useScrollAnimation';
 
 interface DiaryContentProps {
-  /** 富文本 HTML 内容 */
-  htmlContent: string;
+  /** 纯文本内容 */
+  textContent: string;
   /** 自定义类名 */
   className?: string;
 }
 
 /**
  * 日记内容组件
- * 将富文本解析为段落块并渲染，支持滚动动画
+ * 将纯文本解析为段落块并渲染，支持滚动动画
  */
 export const DiaryContent: React.FC<DiaryContentProps> = ({
-  htmlContent,
+  textContent,
   className = '',
 }) => {
-  // 解析 HTML 为段落块
+  // 解析文本为段落块
   const blocks = useMemo(() => {
-    return safeParseHtmlToBlocks(htmlContent);
-  }, [htmlContent]);
+    return safeParseTextToBlocks(textContent);
+  }, [textContent]);
 
   // 批量滚动动画 - 使用更柔和的配置
   const { setRef, isAnimated } = useScrollAnimationBatch(blocks.length);
 
   // 如果解析失败或无内容，显示原始内容
-  if (blocks.length === 0 && htmlContent) {
+  if (blocks.length === 0 && textContent) {
     return (
-      <div
-        className={`px-6 py-6 prose prose-pink max-w-none ${className}`}
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
+      <div className={`px-6 py-6 prose prose-pink max-w-none ${className}`}>
+        {textContent}
+      </div>
     );
   }
 

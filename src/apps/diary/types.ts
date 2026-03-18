@@ -3,50 +3,26 @@
  */
 
 /** 块类型常量 */
-export type DiaryBlockType = 'text' | 'image';
+export type DiaryBlockType = 'text' | 'image' | 'video';
 
 /** 日记段落块接口 */
 export interface DiaryBlock {
   /** 块唯一标识（基于索引生成） */
   id: string;
-  /** 块类型：文本或图片 */
+  /** 块类型：文本、图片或视频 */
   type: DiaryBlockType;
-  /** 块内容：文本内容或图片 URL */
+  /** 块内容：文本内容或媒体 URL */
   content: string;
-  /** 图片说明（仅图片块） */
+  /** 图片/视频说明 */
   caption?: string;
-  /** 原始 HTML 标签名 */
-  tagName?: string;
 }
 
-/** 解析选项 */
-export interface ParseOptions {
-  /** 是否保留空文本块 */
-  keepEmptyBlocks?: boolean;
-  /** 自定义文本标签列表 */
-  textTags?: string[];
-  /** 自定义图片标签列表 */
-  imageTags?: string[];
-}
-
-/** 默认支持的文本标签 */
-export const DEFAULT_TEXT_TAGS = [
-  'p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-  'span', 'strong', 'em', 'b', 'i', 'blockquote', 'li'
-];
-
-/** 默认支持的图片标签 */
-export const DEFAULT_IMAGE_TAGS = ['img'];
-
-/** 日记数据接口（扩展原有接口） */
+/** 日记数据接口（简化版） */
 export interface DiaryData {
-  id: string;
-  title?: string;
-  content: string; // 富文本 HTML
-  mood?: string;
-  weather?: string;
+  /** 日期ID，格式：YYYYMMDD */
   date: string;
-  author?: string;
+  /** 纯文本内容 */
+  content: string;
 }
 
 /** 日记响应接口 */

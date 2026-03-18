@@ -2,6 +2,7 @@ import React from 'react';
 import { DiaryBlock } from '../types';
 import TextBlock from './TextBlock';
 import ImageBlock from './ImageBlock';
+import VideoBlock from './VideoBlock';
 
 interface DiaryBlockRendererProps {
   block: DiaryBlock;
@@ -32,6 +33,8 @@ export const DiaryBlockRenderer: React.FC<DiaryBlockRendererProps> = ({
         return <TextBlock block={block} className={className} />;
       case 'image':
         return <ImageBlock block={block} className={className} />;
+      case 'video':
+        return <VideoBlock block={block} className={className} />;
       default:
         // 未知类型：记录警告并返回空
         console.warn(`Unknown block type: ${block.type}`);

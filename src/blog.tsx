@@ -4,11 +4,9 @@ import ReactDOM from 'react-dom/client';
 // 验证 Cookie 名称
 const AUTH_COOKIE_NAME = 'blog_auth_verified';
 
-// 日记索引项类型
-interface DiaryIndexItem {
-  id: string;
-  date: string;
-}
+// 日记索引项类型 - 日期字符串数组
+// 例如: ["20260307", "20260314"]
+type DiaryIndex = string[];
 
 // 密码验证组件
 const PasswordAuth: React.FC<{ onVerified: () => void }> = ({ onVerified }) => {
@@ -124,11 +122,12 @@ const PasswordAuth: React.FC<{ onVerified: () => void }> = ({ onVerified }) => {
   );
 };
 
-// 格式化日期
+// 格式化日期 (YYYYMMDD -> X月X日 周X)
 const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
+  const year = parseInt(dateStr.slice(0, 4));
+  const month = parseInt(dateStr.slice(4, 6));
+  const day = parseInt(dateStr.slice(6, 8));
+  const date = new Date(year, month - 1, day);
   const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
   const weekday = weekdays[date.getDay()];
   return `${month}月${day}日 ${weekday}`;
@@ -160,7 +159,7 @@ const FloatingElements: React.FC = () => {
 
 // 日记列表组件
 const DiaryList: React.FC = () => {
-  const [diaries, setDiaries] = useState<DiaryIndexItem[]>([]);
+  const [diaries, setDiaries] = useState<DiaryIndex>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -193,16 +192,16 @@ const DiaryList: React.FC = () => {
 
   return (
     <div className="space-y-2">
-      {diaries.map((diary, index) => (
+      {diaries.map((dateId, index) => (
         <a
-          key={diary.id}
-          href={`/blog/detail?id=${diary.id}`}
+          key={dateId}
+          href={`/blog/detail?id=${dateId}`}
           className="group block relative"
           style={{ animationDelay: `${index * 0.1}s` }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-teal-200/50 to-cyan-200/50 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="relative bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/50 shadow-md shadow-teal-100/50 hover:shadow-cyan-200/50 transition-all duration-500 hover:-translate-y-0.5 flex items-center justify-between">
-            <time className="text-base font-light text-teal-600 tracking-wide">{formatDate(diary.date)}</time>
+            <time className="text-base font-light text-teal-600 tracking-wide">{formatDate(dateId)}</time>
             <span className="text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity text-sm">→</span>
           </div>
         </a>
