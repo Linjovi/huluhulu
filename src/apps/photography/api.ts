@@ -120,3 +120,27 @@ export const getPhotographyStyles = async (): Promise<HotStyle[]> => {
     throw new Error("获取灵感失败了喵~");
   }
 };
+
+interface PollResult {
+  status: "running" | "succeeded" | "failed";
+  results?: Array<{ url: string }>;
+  failure_reason?: string;
+  progress?: number;
+}
+
+export const pollPhotographyTask = async (id: string): Promise<PollResult> => {
+  try {
+    const response = await fetch(`/api/image/photography-result?id=${id}`);
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+    const result = await response.json();
+    if (result.code !== 0) {
+      throw new Error(result.message || "查询任务失败");
+    }
+    return result.data;
+  } catch (error) {
+    console.error("Poll Photography Task Error:", error);
+    throw new Error("查询任务失败了喵~");
+  }
+};
