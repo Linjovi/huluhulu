@@ -222,12 +222,6 @@ const DiaryDetailPage: React.FC<{ id: string }> = ({ id }) => {
         >
           <span className="text-2xl">←</span>
         </a>
-        <a
-          href={`/blog/edit?id=${id}`}
-          className="px-3 py-1 rounded-lg bg-teal-100 text-teal-500 hover:bg-teal-200 transition-colors text-sm font-light"
-        >
-          编辑
-        </a>
       </div>
 
       {/* 日期 */}
