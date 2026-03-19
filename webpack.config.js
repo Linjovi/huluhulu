@@ -7,6 +7,7 @@ module.exports = {
     main: './src/index.tsx',
     blog: './src/blog.tsx',
     'blog/detail': './src/blog-detail.tsx',
+    'blog/edit': './src/blog-edit.tsx',
   },
   output: {
     path: path.resolve(__dirname, 'public'),
@@ -89,6 +90,12 @@ module.exports = {
       filename: 'blog/detail/index.html',
       favicon: './src/favicon.png',
       chunks: ['blog/detail'],
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/blog-edit.html',
+      filename: 'blog/edit/index.html',
+      favicon: './src/favicon.png',
+      chunks: ['blog/edit'],
     }),
     new CopyWebpackPlugin({
       patterns: [

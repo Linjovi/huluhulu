@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import { DiaryContent } from './apps/diary/components/DiaryContent';
 
 // 验证 Cookie 名称
 const AUTH_COOKIE_NAME = 'blog_auth_verified';
 
-// 日记详情类型
-interface DiaryDetail {
-  date: string;  // 日期ID，格式：YYYYMMDD
-  content: string;  // 纯文本内容
+// 日记数据类型
+interface DiaryData {
+  id: string;
+  content: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// 格式化日期 (YYYYMMDD -> X月X日 周X)
-const formatDate = (dateStr: string) => {
+// 格式化日期为 YYYYMMDD 格式
+const formatDateId = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+};
+
+// 格式化日期为显示格式 (YYYYMMDD -> X月X日 周X)
+const formatDateDisplay = (dateStr: string) => {
   const year = parseInt(dateStr.slice(0, 4));
   const month = parseInt(dateStr.slice(4, 6));
   const day = parseInt(dateStr.slice(6, 8));
   const date = new Date(year, month - 1, day);
   const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
   const weekday = weekdays[date.getDay()];
-  return `${month}月${day}日 ${weekday}`;
+  return `${year}年${month}月${day}日 ${weekday}`;
 };
 
 // 装饰元素组件
@@ -153,43 +162,77 @@ const PasswordAuth: React.FC<{ onVerified: () => void }> = ({ onVerified }) => {
   );
 };
 
-// 日记详情页
-const DiaryDetailPage: React.FC<{ id: string }> = ({ id }) => {
-  const [diary, setDiary] = useState<DiaryDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+// 日记编辑器组件
+const DiaryEditor: React.FC<{ 
+  diaryId?: string;
+  onSaveSuccess: (id: string) => void;
+}> = ({ diaryId, onSaveSuccess }) => {
+  const isNew = !diaryId;
+  const [date, setDate] = useState(formatDateId(new Date()));
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(!isNew);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  // 加载现有日记
   useEffect(() => {
-    // id 就是日期，如 20260307
-    // 优先从 API 获取，失败则降级到静态文件
-    fetch(`/api/diary/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data) {
-          setDiary({ date: data.data.id, content: data.data.content });
-          setLoading(false);
-        } else {
-          // API 失败，尝试静态文件
-          return fetch(`/diary/content/${id}.txt`);
-        }
-      })
-      .then(res => {
-        if (res && res.ok) {
-          return res.text();
-        }
-        return null;
-      })
-      .then(content => {
-        if (content) {
-          setDiary({ date: id, content });
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setError(true);
-        setLoading(false);
-      });
-  }, [id]);
+    if (diaryId) {
+      setLoading(true);
+      fetch(`/api/diary/${diaryId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setDate(data.data.id);
+            setContent(data.data.content);
+          } else {
+            setError('加载日记失败');
+          }
+        })
+        .catch(() => setError('加载日记失败'))
+        .finally(() => setLoading(false));
+    }
+  }, [diaryId]);
+
+  const handleSave = async () => {
+    if (!content.trim()) {
+      setError('日记内容不能为空');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      let response;
+      if (isNew) {
+        // 创建新日记
+        response = await fetch('/api/diary/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: date, content }),
+        });
+      } else {
+        // 更新现有日记
+        response = await fetch(`/api/diary/update/${diaryId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content }),
+        });
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        onSaveSuccess(isNew ? date : diaryId!);
+      } else {
+        setError(data.error || '保存失败');
+      }
+    } catch (err) {
+      setError('保存失败，请重试');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -200,47 +243,85 @@ const DiaryDetailPage: React.FC<{ id: string }> = ({ id }) => {
     );
   }
 
-  if (error || !diary) {
-    return (
-      <div className="text-center py-20">
-        <div className="text-5xl mb-4">🥀</div>
-        <p className="text-teal-400 font-light mb-4">日记不存在</p>
-        <a href="/blog" className="text-cyan-500 hover:text-cyan-600 transition-colors">
-          返回列表
-        </a>
-      </div>
-    );
-  }
-
   return (
-    <article className="relative">
-      {/* 返回按钮和编辑按钮 */}
-      <div className="absolute -left-2 -top-2 flex items-center gap-2 z-10">
-        <a
-          href="/blog"
-          className="w-10 h-10 flex items-center justify-center text-teal-400 hover:text-teal-500 transition-colors"
-        >
-          <span className="text-2xl">←</span>
-        </a>
-        <a
-          href={`/blog/edit?id=${id}`}
-          className="px-3 py-1 rounded-lg bg-teal-100 text-teal-500 hover:bg-teal-200 transition-colors text-sm font-light"
-        >
-          编辑
-        </a>
+    <div className="space-y-6">
+      {/* 标题 */}
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-light text-teal-600 tracking-wide">
+          {isNew ? '✨ 新日记' : '📝 编辑日记'}
+        </h1>
       </div>
 
-      {/* 日期 */}
-      <div className="mb-6 pt-2">
-        <time className="text-lg font-light text-teal-500 tracking-wide">{formatDate(diary.date)}</time>
+      {/* 日期选择 */}
+      <div className="space-y-2">
+        <label className="block text-teal-500 font-light text-sm">日期</label>
+        <input
+          type="date"
+          value={`${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`}
+          onChange={(e) => {
+            const selectedDate = new Date(e.target.value);
+            setDate(formatDateId(selectedDate));
+          }}
+          disabled={!isNew}
+          className={`
+            w-full px-4 py-3 rounded-xl border-2 
+            ${isNew 
+              ? 'bg-white/50 border-teal-200 text-teal-700 focus:border-teal-400 focus:bg-teal-50' 
+              : 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed'
+            }
+            outline-none transition-colors
+          `}
+        />
+        <p className="text-xs text-teal-400 font-light">
+          {formatDateDisplay(date)}
+        </p>
       </div>
 
-      {/* 内容 */}
-      <DiaryContent 
-        textContent={diary.content} 
-        className="text-teal-600 leading-loose text-lg font-light"
-      />
-    </article>
+      {/* 内容编辑 */}
+      <div className="space-y-2">
+        <label className="block text-teal-500 font-light text-sm">内容</label>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="写下今天的故事..."
+          rows={12}
+          className="w-full px-4 py-3 rounded-xl border-2 border-teal-200 bg-white/50 text-teal-700 focus:border-teal-400 focus:bg-teal-50 outline-none transition-colors resize-none leading-relaxed"
+        />
+        <p className="text-xs text-teal-400 font-light text-right">
+          {content.length} 字
+        </p>
+      </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="text-center text-red-400 text-sm animate-pulse">
+          {error}
+        </div>
+      )}
+
+      {/* 操作按钮 */}
+      <div className="flex gap-4 pt-4">
+        <button
+          onClick={() => window.location.href = '/blog'}
+          className="flex-1 py-3 rounded-xl border-2 border-teal-200 text-teal-500 hover:bg-teal-50 transition-colors font-light"
+        >
+          取消
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`
+            flex-1 py-3 rounded-xl transition-colors font-medium
+            ${saving 
+              ? 'bg-teal-200 text-white cursor-not-allowed' 
+              : 'bg-teal-400 text-white hover:bg-teal-500'
+            }
+          `}
+        >
+          {saving ? '保存中...' : '保存'}
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -254,10 +335,10 @@ const checkAuthStatus = (): boolean => {
 };
 
 // 主页面组件
-const DiaryDetailApp: React.FC = () => {
+const DiaryEditApp: React.FC = () => {
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const [isChecking, setIsChecking] = useState<boolean>(true);
-  const [diaryId, setDiaryId] = useState<string>('');
+  const [diaryId, setDiaryId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // 检查验证状态
@@ -277,6 +358,10 @@ const DiaryDetailApp: React.FC = () => {
     setIsVerified(true);
   };
 
+  const handleSaveSuccess = (id: string) => {
+    window.location.href = `/blog/detail?id=${id}`;
+  };
+
   // 加载中
   if (isChecking) {
     return (
@@ -294,12 +379,6 @@ const DiaryDetailApp: React.FC = () => {
     return <PasswordAuth onVerified={handleVerified} />;
   }
 
-  // 没有 id 参数，返回列表
-  if (!diaryId) {
-    window.location.href = '/blog';
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-emerald-50 relative overflow-hidden">
       {/* 装饰背景 */}
@@ -311,15 +390,16 @@ const DiaryDetailApp: React.FC = () => {
 
       {/* 主内容 */}
       <main className="relative z-10 max-w-xl mx-auto px-6 py-12">
-        <DiaryDetailPage id={diaryId} />
-      </main>
-
-      {/* 底部装饰 */}
-      <div className="fixed bottom-6 left-0 right-0 text-center z-10">
-        <a href="/blog" className="text-teal-400 hover:text-teal-500 text-sm font-light transition-colors">
-          🏠 返回列表
+        {/* 返回按钮 */}
+        <a
+          href="/blog"
+          className="absolute -left-2 top-10 w-10 h-10 flex items-center justify-center text-teal-400 hover:text-teal-500 transition-colors z-10"
+        >
+          <span className="text-2xl">←</span>
         </a>
-      </div>
+        
+        <DiaryEditor diaryId={diaryId} onSaveSuccess={handleSaveSuccess} />
+      </main>
 
       {/* 自定义动画样式 */}
       <style>{`
@@ -346,7 +426,7 @@ if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
-      <DiaryDetailApp />
+      <DiaryEditApp />
     </React.StrictMode>
   );
 }

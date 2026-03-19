@@ -163,10 +163,28 @@ const DiaryList: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/diary/content/index.json')
+    // 优先从 API 获取，失败则降级到静态文件
+    fetch('/api/diary/list')
       .then(res => res.json())
       .then(data => {
-        setDiaries(data);
+        if (data.success && data.data) {
+          setDiaries(data.data);
+          setLoading(false);
+        } else {
+          // API 失败，尝试静态文件
+          return fetch('/diary/content/index.json');
+        }
+      })
+      .then(res => {
+        if (res) {
+          return res.json();
+        }
+        return null;
+      })
+      .then(data => {
+        if (data) {
+          setDiaries(data);
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -270,6 +288,17 @@ const DiaryPage: React.FC = () => {
           </h1>
           <p className="text-teal-400 font-light text-sm">记录每一个温柔的时刻</p>
         </header>
+
+        {/* 新建日记按钮 */}
+        <div className="text-center mb-6">
+          <a
+            href="/blog/edit"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-400 text-white hover:bg-teal-500 transition-colors font-light text-sm"
+          >
+            <span>✨</span>
+            <span>写日记</span>
+          </a>
+        </div>
 
         <DiaryList />
       </main>
