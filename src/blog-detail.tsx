@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { DiaryContent } from './apps/diary/components/DiaryContent';
+import { CatComfort } from './apps/diary/components/CatComfort';
 
 // 口令 Cookie 名称
 const PASSPHRASE_COOKIE_NAME = 'diary_passphrase';
@@ -208,6 +209,12 @@ const DiaryDetailPage: React.FC<{ id: string; passphrase: string }> = ({ id, pas
       <DiaryContent 
         textContent={diary.content} 
         className="text-teal-600 leading-loose text-lg font-light"
+      />
+      
+      {/* 猫猫互动入口 */}
+      <CatComfort 
+        diaryContent={diary.content} 
+        diaryDate={formatDate(diary.date)}
       />
     </article>
   );
