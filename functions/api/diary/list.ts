@@ -1,11 +1,13 @@
 /**
- * GET /api/diary/list - Get all diary IDs
+ * GET /api/diary/list - Get all diary IDs for a passphrase
  */
 import { getDiaryList } from "../../services/diary";
 
 export async function onRequestGet(context: any) {
   try {
     const db = context.env.DB;
+    const url = new URL(context.request.url);
+    const passphrase = url.searchParams.get('passphrase') || '';
     
     if (!db) {
       return new Response(
@@ -14,7 +16,14 @@ export async function onRequestGet(context: any) {
       );
     }
     
-    const list = await getDiaryList(db);
+    if (!passphrase) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing passphrase" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    
+    const list = await getDiaryList(db, passphrase);
     
     return new Response(
       JSON.stringify({ success: true, data: list }),

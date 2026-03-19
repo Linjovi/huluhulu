@@ -2,14 +2,33 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { DiaryContent } from './apps/diary/components/DiaryContent';
 
-// 验证 Cookie 名称
-const AUTH_COOKIE_NAME = 'blog_auth_verified';
+// 口令 Cookie 名称
+const PASSPHRASE_COOKIE_NAME = 'diary_passphrase';
 
 // 日记详情类型
 interface DiaryDetail {
   date: string;  // 日期ID，格式：YYYYMMDD
   content: string;  // 纯文本内容
 }
+
+// 获取存储的口令
+const getStoredPassphrase = (): string => {
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === PASSPHRASE_COOKIE_NAME) {
+      return decodeURIComponent(value);
+    }
+  }
+  return '';
+};
+
+// 保存口令到 cookie
+const savePassphrase = (passphrase: string) => {
+  const expires = new Date();
+  expires.setDate(expires.getDate() + 30);
+  document.cookie = `${PASSPHRASE_COOKIE_NAME}=${encodeURIComponent(passphrase)}; expires=${expires.toUTCString()}; path=/`;
+};
 
 // 格式化日期 (YYYYMMDD -> X月X日 周X)
 const formatDate = (dateStr: string) => {
@@ -46,42 +65,28 @@ const FloatingElements: React.FC = () => {
   );
 };
 
-// 密码验证组件
-const PasswordAuth: React.FC<{ onVerified: () => void }> = ({ onVerified }) => {
+// 口令输入组件
+const PassphraseInput: React.FC<{ onVerified: (passphrase: string) => void }> = ({ onVerified }) => {
   const [input, setInput] = useState('');
-  const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
-
-  const correctPassword = '枕边书怀中猫意中人';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
-    setError(false);
   };
 
-  const handleVerify = () => {
-    if (input === correctPassword) {
-      const expires = new Date();
-      expires.setDate(expires.getDate() + 30);
-      document.cookie = `${AUTH_COOKIE_NAME}=true; expires=${expires.toUTCString()}; path=/`;
-      onVerified();
+  const handleConfirm = () => {
+    if (input.trim()) {
+      savePassphrase(input.trim());
+      onVerified(input.trim());
     } else {
-      setError(true);
       setShake(true);
-      setTimeout(() => {
-        setShake(false);
-      }, 500);
+      setTimeout(() => setShake(false), 500);
     }
-  };
-
-  const handleClear = () => {
-    setInput('');
-    setError(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleVerify();
+      handleConfirm();
     }
   };
 
@@ -94,7 +99,8 @@ const PasswordAuth: React.FC<{ onVerified: () => void }> = ({ onVerified }) => {
       `}>
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">🔐</div>
-          <h2 className="text-xl font-medium text-teal-700 tracking-wide mb-2">对口令</h2>
+          <h2 className="text-xl font-medium text-teal-700 tracking-wide mb-2">输入口令</h2>
+          <p className="text-sm text-teal-400 font-light">不同口令看到不同日记</p>
         </div>
 
         <div className="mb-4">
@@ -103,39 +109,22 @@ const PasswordAuth: React.FC<{ onVerified: () => void }> = ({ onVerified }) => {
             value={input}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            maxLength={9}
             autoFocus
-            className={`
-              w-full px-4 py-3 text-center text-xl tracking-widest
+            className="
+              w-full px-4 py-3 text-center text-xl
               bg-white/50 border-2 rounded-xl
+              border-teal-200 text-teal-700 focus:border-teal-400 focus:bg-teal-50
               outline-none transition-colors
-              ${error
-                ? 'border-red-300 bg-red-50 text-red-600'
-                : 'border-teal-200 text-teal-700 focus:border-teal-400 focus:bg-teal-50'
-              }
-            `}
-            placeholder="请输入"
+            "
+            placeholder="请输入口令"
           />
         </div>
 
-        {error && (
-          <div className="text-center mb-4 text-red-400 text-sm animate-pulse">
-            口令错误，请重试
-          </div>
-        )}
-
         <button
-          onClick={handleVerify}
-          className="w-full py-3 mb-3 rounded-xl bg-teal-400 text-white hover:bg-teal-500 transition-colors font-medium"
+          onClick={handleConfirm}
+          className="w-full py-3 rounded-xl bg-teal-400 text-white hover:bg-teal-500 transition-colors font-medium"
         >
           确认
-        </button>
-
-        <button
-          onClick={handleClear}
-          className="w-full py-3 rounded-xl text-teal-400 hover:text-teal-600 hover:bg-teal-50 transition-colors text-sm font-light"
-        >
-          清除重输
         </button>
       </div>
 
@@ -154,34 +143,20 @@ const PasswordAuth: React.FC<{ onVerified: () => void }> = ({ onVerified }) => {
 };
 
 // 日记详情页
-const DiaryDetailPage: React.FC<{ id: string }> = ({ id }) => {
+const DiaryDetailPage: React.FC<{ id: string; passphrase: string }> = ({ id, passphrase }) => {
   const [diary, setDiary] = useState<DiaryDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    // id 就是日期，如 20260307
-    // 优先从 API 获取，失败则降级到静态文件
-    fetch(`/api/diary/${id}`)
+    // 从 API 获取日记详情
+    fetch(`/api/diary/${id}?passphrase=${encodeURIComponent(passphrase)}`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data) {
           setDiary({ date: data.data.id, content: data.data.content });
-          setLoading(false);
         } else {
-          // API 失败，尝试静态文件
-          return fetch(`/diary/content/${id}.txt`);
-        }
-      })
-      .then(res => {
-        if (res && res.ok) {
-          return res.text();
-        }
-        return null;
-      })
-      .then(content => {
-        if (content) {
-          setDiary({ date: id, content });
+          setError(true);
         }
         setLoading(false);
       })
@@ -189,7 +164,7 @@ const DiaryDetailPage: React.FC<{ id: string }> = ({ id }) => {
         setError(true);
         setLoading(false);
       });
-  }, [id]);
+  }, [id, passphrase]);
 
   if (loading) {
     return (
@@ -238,25 +213,16 @@ const DiaryDetailPage: React.FC<{ id: string }> = ({ id }) => {
   );
 };
 
-// 检查是否已验证
-const checkAuthStatus = (): boolean => {
-  const cookies = document.cookie.split(';');
-  return cookies.some(cookie => {
-    const [name, value] = cookie.trim().split('=');
-    return name === AUTH_COOKIE_NAME && value === 'true';
-  });
-};
-
 // 主页面组件
 const DiaryDetailApp: React.FC = () => {
-  const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [passphrase, setPassphrase] = useState<string>('');
   const [isChecking, setIsChecking] = useState<boolean>(true);
   const [diaryId, setDiaryId] = useState<string>('');
 
   useEffect(() => {
-    // 检查验证状态
-    const verified = checkAuthStatus();
-    setIsVerified(verified);
+    // 检查是否有存储的口令
+    const stored = getStoredPassphrase();
+    setPassphrase(stored);
     setIsChecking(false);
 
     // 从 query 参数获取日记 ID
@@ -267,8 +233,8 @@ const DiaryDetailApp: React.FC = () => {
     }
   }, []);
 
-  const handleVerified = () => {
-    setIsVerified(true);
+  const handleVerified = (newPassphrase: string) => {
+    setPassphrase(newPassphrase);
   };
 
   // 加载中
@@ -283,9 +249,9 @@ const DiaryDetailApp: React.FC = () => {
     );
   }
 
-  // 未验证，显示验证界面
-  if (!isVerified) {
-    return <PasswordAuth onVerified={handleVerified} />;
+  // 没有口令，显示输入界面
+  if (!passphrase) {
+    return <PassphraseInput onVerified={handleVerified} />;
   }
 
   // 没有 id 参数，返回列表
@@ -305,7 +271,7 @@ const DiaryDetailApp: React.FC = () => {
 
       {/* 主内容 */}
       <main className="relative z-10 max-w-xl mx-auto px-6 py-12">
-        <DiaryDetailPage id={diaryId} />
+        <DiaryDetailPage id={diaryId} passphrase={passphrase} />
       </main>
 
       {/* 底部装饰 */}

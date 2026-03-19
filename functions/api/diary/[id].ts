@@ -1,5 +1,5 @@
 /**
- * GET /api/diary/[id] - Get a single diary by ID
+ * GET /api/diary/[id] - Get a single diary by ID and passphrase
  */
 import { getDiaryById } from "../../services/diary";
 
@@ -7,6 +7,8 @@ export async function onRequestGet(context: any) {
   try {
     const db = context.env.DB;
     const id = context.params.id;
+    const url = new URL(context.request.url);
+    const passphrase = url.searchParams.get('passphrase') || '';
     
     if (!db) {
       return new Response(
@@ -22,7 +24,14 @@ export async function onRequestGet(context: any) {
       );
     }
     
-    const diary = await getDiaryById(db, id);
+    if (!passphrase) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing passphrase" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    
+    const diary = await getDiaryById(db, id, passphrase);
     
     if (!diary) {
       return new Response(

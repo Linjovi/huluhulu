@@ -7,6 +7,8 @@ export async function onRequestDelete(context: any) {
   try {
     const db = context.env.DB;
     const id = context.params.id;
+    const url = new URL(context.request.url);
+    const passphrase = url.searchParams.get('passphrase') || '';
     
     if (!db) {
       return new Response(
@@ -22,7 +24,14 @@ export async function onRequestDelete(context: any) {
       );
     }
     
-    const deleted = await deleteDiary(db, id);
+    if (!passphrase) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing passphrase" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    
+    const deleted = await deleteDiary(db, id, passphrase);
     
     if (!deleted) {
       return new Response(

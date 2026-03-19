@@ -1,7 +1,7 @@
 /**
  * POST /api/diary/create - Create a new diary
  */
-import { createDiary, getDiaryById } from "../../services/diary";
+import { createDiary, checkDiaryExists } from "../../services/diary";
 
 // Validate ID format: YYYYMMDD
 function isValidDateFormat(id: string): boolean {
@@ -20,11 +20,11 @@ export async function onRequestPost(context: any) {
       );
     }
     
-    const { id, content } = body;
+    const { id, content, passphrase } = body;
     
-    if (!id || !content) {
+    if (!id || !content || !passphrase) {
       return new Response(
-        JSON.stringify({ success: false, error: "Missing required fields: id, content" }),
+        JSON.stringify({ success: false, error: "Missing required fields: id, content, passphrase" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -36,16 +36,16 @@ export async function onRequestPost(context: any) {
       );
     }
     
-    // Check if diary already exists
-    const existing = await getDiaryById(db, id);
-    if (existing) {
+    // Check if diary already exists for this date and passphrase
+    const exists = await checkDiaryExists(db, id, passphrase);
+    if (exists) {
       return new Response(
-        JSON.stringify({ success: false, error: "Diary already exists" }),
+        JSON.stringify({ success: false, error: "Diary already exists for this date" }),
         { status: 409, headers: { "Content-Type": "application/json" } }
       );
     }
     
-    const diary = await createDiary(db, id, content);
+    const diary = await createDiary(db, id, content, passphrase);
     
     return new Response(
       JSON.stringify({ success: true, data: diary }),

@@ -23,16 +23,16 @@ export async function onRequestPut(context: any) {
       );
     }
     
-    const { content } = body;
+    const { content, passphrase } = body;
     
-    if (!content) {
+    if (!content || !passphrase) {
       return new Response(
-        JSON.stringify({ success: false, error: "Missing required field: content" }),
+        JSON.stringify({ success: false, error: "Missing required fields: content, passphrase" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
     
-    const diary = await updateDiary(db, id, content);
+    const diary = await updateDiary(db, id, content, passphrase);
     
     if (!diary) {
       return new Response(
