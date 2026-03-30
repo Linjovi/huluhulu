@@ -24,12 +24,13 @@ const SYSTEM_INSTRUCTION = `
 
 function buildTarotPrompt(data: TarotRequestData): string {
   const { cards, spreadName, question } = data;
+  const cardsText = cards.map(c => `${c.position}: ${c.name} ${c.isReversed ? '(逆位)' : '(正位)'}`).join("\n");
   return `
 占卜类型: ${spreadName}
 ${question ? `用户问题: ${question}` : ""}
 
 抽出的牌:
-${cards.join("\n")}
+${cardsText}
 
 请开始解读喵。
 `;

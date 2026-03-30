@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React from "react";
 import {
   Routes,
   Route,
@@ -7,7 +7,6 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Home } from "./common/components/Home";
-import { HotSearch } from "./apps/hot-search/HotSearch";
 import { AnswerBook } from "./apps/answer/index";
 import TarotApp from "./apps/tarot/index";
 import PhotographyApp from "./apps/photography/index";
@@ -17,57 +16,9 @@ import MeowBTIApp from "./apps/mbti/index";
 import { SEO } from "./common/components/SEO";
 import { CatPawNavigator } from "./common/components/CatPawNavigator";
 
-// 路由深度映射，用于判断前进/后退
-const routeDepth: Record<string, number> = {
-  "/": 0,
-  "/judge": 1,
-  "/hot-search": 1,
-  "/answer": 1,
-  "/tarot": 1,
-  "/photography": 1,
-  "/meme": 1,
-  "/mbti": 1,
-};
-
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [prevLocation, setPrevLocation] = useState(location);
-  const [direction, setDirection] = useState<"forward" | "backward">("forward");
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const prevLocationRef = useRef<string>(location.pathname);
-  const isInitialMount = useRef<boolean>(true);
-
-  useEffect(() => {
-    // 跳过初始加载的过渡
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    const currentDepth = routeDepth[location.pathname] ?? 1;
-    const prevDepth = routeDepth[prevLocationRef.current] ?? 1;
-
-    // 判断导航方向
-    const isBackward =
-      currentDepth < prevDepth ||
-      (location.pathname === "/" && prevLocationRef.current !== "/");
-
-    setDirection(isBackward ? "backward" : "forward");
-
-    if (location.pathname !== prevLocationRef.current) {
-      setIsTransitioning(true);
-
-      // 动画完成后更新显示的位置
-      const timer = setTimeout(() => {
-        setPrevLocation(location);
-        setIsTransitioning(false);
-      }, 350);
-
-      prevLocationRef.current = location.pathname;
-      return () => clearTimeout(timer);
-    }
-  }, [location.pathname]);
 
   const handleBack = () => {
     if (location.pathname === "/") return;
@@ -75,15 +26,6 @@ const App: React.FC = () => {
   };
 
   const getSEODetails = (pathname: string) => {
-    if (pathname.startsWith("/hot-search")) {
-      return {
-        title: "吃瓜喵 - 全网实时热搜聚合榜单",
-        description:
-          "吃瓜喵为您一站式聚合微博热搜、抖音热榜等全网平台的实时热点资讯。拒绝信息差，第一时间掌握娱乐八卦、社会新闻和网络流行梗，让您轻松高效吃瓜。",
-        keywords:
-          "微博热搜, 抖音热榜, 吃瓜, 实时热点, 娱乐新闻, 今日头条, 热点追踪, 社会新闻, 网络热梗, 聚合阅读",
-      };
-    }
     if (pathname.startsWith("/answer")) {
       return {
         title: "答案之书喵 - 治愈系心灵指引与决策助手",
@@ -141,9 +83,9 @@ const App: React.FC = () => {
     return {
       title: "呼噜呼噜事务所 - 您的治愈系AI趣味生活助手",
       description:
-        "欢迎来到呼噜呼噜事务所！这里汇聚了猫猫摄影师、猫猫法官、吃瓜喵、塔罗秘境喵等一系列治愈有趣的AI应用。无论您是想看热搜、求夸奖、测运势还是断家务事，这里都能为您带来温暖与快乐。",
+        "欢迎来到呼噜呼噜事务所！这里汇聚了猫猫摄影师、猫猫法官、塔罗秘境喵等一系列治愈有趣的AI应用。无论您是想求夸奖、测运势还是断家务事，这里都能为您带来温暖与快乐。",
       keywords:
-        "呼噜呼噜事务所, 猫猫摄影师, 猫猫法官, 塔罗牌, 热搜聚合, 趣味应用, AI应用, 治愈系, 生活助手, 休闲娱乐, Web3应用",
+        "呼噜呼噜事务所, 猫猫摄影师, 猫猫法官, 塔罗牌, 趣味应用, AI应用, 治愈系, 生活助手, 休闲娱乐, Web3应用",
     };
   };
 
@@ -152,94 +94,33 @@ const App: React.FC = () => {
   // Wrappers to pass existing 'onBack' prop to components that might expect it,
   // although with Router they should ideally just link back or we handle it in NavBar.
   // Existing components:
-  // HotSearch: props.onBack
   // AnswerBook: props.onBack
   // TarotApp: props.onBack
   // PhotographyApp: props.onBack
 
   return (
     // Mobile-first container constraint
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex justify-center w-full">
       <SEO
         title={seoDetails.title}
         description={seoDetails.description}
         keywords={seoDetails.keywords}
       />
-      <div className="mx-auto min-h-screen bg-[#f9fafb] shadow-2xl relative overflow-hidden">
+      <div className="w-full max-w-[600px] min-h-screen bg-[#f9fafb] shadow-2xl relative overflow-hidden">
         {location.pathname !== "/" && <CatPawNavigator />}
-        <main className="w-full page-transition-container">
-          {/* 旧页面 - 退出动画 */}
-          {isTransitioning && (
-            <div
-              className={`page-transition-wrapper page-exit ${direction}`}
-              key={`prev-${prevLocation.pathname}`}
-            >
-              <Routes location={prevLocation}>
-                <Route
-                  path="/"
-                  element={
-                    <Home />
-                  }
-                />
-                <Route path="/judge" element={<JudgeApp />} />
-                <Route
-                  path="/hot-search"
-                  element={<HotSearch onBack={handleBack} />}
-                />
-                <Route
-                  path="/answer"
-                  element={<AnswerBook onBack={handleBack} />}
-                />
-                <Route
-                  path="/tarot"
-                  element={<TarotApp onBack={handleBack} />}
-                />
-                <Route
-                  path="/photography"
-                  element={<PhotographyApp onBack={handleBack} />}
-                />
-                <Route path="/meme" element={<MemeApp />} />
-                <Route path="/mbti" element={<MeowBTIApp />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
-          )}
+        <main className="w-full h-full relative">
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route path="/judge" element={<JudgeApp />} />
+            <Route path="/answer" element={<AnswerBook onBack={handleBack} />} />
+            <Route path="/tarot" element={<TarotApp onBack={handleBack} />} />
+            <Route path="/photography" element={<PhotographyApp onBack={handleBack} />} />
+            <Route path="/meme" element={<MemeApp />} />
+            <Route path="/mbti" element={<MeowBTIApp />} />
 
-          {/* 新页面 - 进入动画 */}
-          <div
-            className={`page-transition-wrapper ${
-              isTransitioning ? `page-enter ${direction}` : "page-idle"
-            }`}
-            key={`current-${location.pathname}`}
-          >
-            <Routes location={location}>
-              <Route
-                path="/"
-                element={
-                  <Home />
-                }
-              />
-              <Route path="/judge" element={<JudgeApp />} />
-              <Route
-                path="/hot-search"
-                element={<HotSearch onBack={handleBack} />}
-              />
-              <Route
-                path="/answer"
-                element={<AnswerBook onBack={handleBack} />}
-              />
-              <Route path="/tarot" element={<TarotApp onBack={handleBack} />} />
-              <Route
-                path="/photography"
-                element={<PhotographyApp onBack={handleBack} />}
-              />
-              <Route path="/meme" element={<MemeApp />} />
-              <Route path="/mbti" element={<MeowBTIApp />} />
-
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </div>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </main>
       </div>
     </div>

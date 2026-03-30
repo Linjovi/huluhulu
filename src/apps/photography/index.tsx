@@ -5,7 +5,6 @@ import { Sparkles } from "lucide-react";
 import { ImageDisplay } from "./components/ImageDisplay";
 import { ControlPanel } from "./components/ControlPanel";
 import { ResultActions } from "./components/ResultActions";
-import { useHotStyles } from "./hooks/useHotStyles";
 
 interface PhotographyAppProps {
   onBack: () => void;
@@ -20,15 +19,11 @@ const PhotographyApp: React.FC<PhotographyAppProps> = ({ onBack }) => {
   const [result, setResult] = useState<PhotographyResponse | null>(null);
   const [showOriginal, setShowOriginal] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"hot" | "function">("hot");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Custom hook for hot styles
-  const { hotStyles, loadingHotStyles } = useHotStyles();
 
   const showError = (msg: string) => {
     setErrorMsg(msg);
@@ -47,7 +42,6 @@ const PhotographyApp: React.FC<PhotographyAppProps> = ({ onBack }) => {
           image: savedImage,
           prompt: savedPrompt,
           selectedPreset: savedPreset,
-          activeTab: savedActiveTab,
           backgroundImage: savedBgImage,
           timestamp,
         } = JSON.parse(storedTask);
@@ -62,7 +56,6 @@ const PhotographyApp: React.FC<PhotographyAppProps> = ({ onBack }) => {
         setImage(savedImage);
         setPrompt(savedPrompt || "");
         setSelectedPreset(savedPreset);
-        if (savedActiveTab) setActiveTab(savedActiveTab);
         if (savedBgImage) setBackgroundImage(savedBgImage);
 
         setLoading(true);
@@ -184,7 +177,6 @@ const PhotographyApp: React.FC<PhotographyAppProps> = ({ onBack }) => {
                 image,
                 prompt,
                 selectedPreset,
-                activeTab,
                 backgroundImage,
                 timestamp: Date.now(),
               })
@@ -291,10 +283,6 @@ const PhotographyApp: React.FC<PhotographyAppProps> = ({ onBack }) => {
       {/* Controls Area */}
       {image && !result ? (
         <ControlPanel
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          hotStyles={hotStyles}
-          loadingHotStyles={loadingHotStyles}
           selectedPreset={selectedPreset}
           setSelectedPreset={setSelectedPreset}
           prompt={prompt}

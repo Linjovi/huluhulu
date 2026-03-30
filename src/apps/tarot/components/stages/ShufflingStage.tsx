@@ -7,7 +7,7 @@ const ShufflingStage: React.FC = () => {
     const cardCount = 16;
     
     return (
-        <div className="flex flex-col items-center justify-center space-y-16 py-12">
+        <div className="flex flex-col items-center justify-center space-y-16 py-12 animate-fade-in">
             <div className="relative w-48 h-72 perspective-1000">
                 {[...Array(cardCount)].map((_, i) => {
                     const isEven = i % 2 === 0;

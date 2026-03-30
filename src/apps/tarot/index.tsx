@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Phaser from 'phaser';
+import PhaserGame from '../../common/components/PhaserGame';
+import { TarotScene } from '../../phaser/TarotScene';
 import { getDeck, SPREAD_CONFIGS } from './constants';
 import { TarotCard, DrawnCard, GameStage, SpreadConfig, TarotReadingResult } from './types';
 import { getTarotReading } from './services/geminiService';
@@ -24,6 +27,18 @@ const LOADING_MESSAGES = [
 ];
 
 const TAROT_CAT_AVATAR = "https://pic1.imgdb.cn/item/693811d900233646958db503.png";
+
+const phaserConfig: Phaser.Types.Core.GameConfig = {
+  type: Phaser.AUTO,
+  width: '100%',
+  height: '100%',
+  transparent: true,
+  scale: {
+    mode: Phaser.Scale.RESIZE,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
+  scene: TarotScene,
+};
 
 interface AppProps {
   onBack: () => void;
@@ -84,6 +99,7 @@ const App: React.FC<AppProps> = ({ onBack }) => {
   // Update stage ref
   useEffect(() => {
     stageRef.current = stage;
+    window.dispatchEvent(new CustomEvent('tarot-stage-change', { detail: { stage } }));
   }, [stage]);
 
   // Cycle loading messages
@@ -183,6 +199,9 @@ const App: React.FC<AppProps> = ({ onBack }) => {
     const clientX = e.clientX;
     const clientY = e.clientY;
 
+    // Dispatch event to Phaser scene
+    window.dispatchEvent(new CustomEvent('tarot-draw', { detail: { x: clientX, y: clientY } }));
+
     // 1. Trigger Paw Reaching
     setPawState({
       visible: true,
@@ -255,16 +274,19 @@ const App: React.FC<AppProps> = ({ onBack }) => {
   }, [drawnCards, stage, animatingCard, selectedSpread.cards, selectedSpread.name, userQuestion]);
 
   const handleReveal = async (index: number) => {
-    if (drawnCards[index].isRevealed) return;
+    setDrawnCards(prevCards => {
+      if (prevCards[index].isRevealed) return prevCards;
 
-    const newCards = [...drawnCards];
-    newCards[index].isRevealed = true;
-    setDrawnCards(newCards);
+      const newCards = [...prevCards];
+      newCards[index] = { ...newCards[index], isRevealed: true };
 
-    // Check if all revealed
-    if (newCards.every(c => c.isRevealed) && !reading && !loading) {
-      await generateInterpretation(newCards);
-    }
+      // Check if all revealed
+      if (newCards.every(c => c.isRevealed) && !reading && !loading) {
+        setTimeout(() => generateInterpretation(newCards), 0);
+      }
+
+      return newCards;
+    });
   };
 
   const generateInterpretation = async (cards: DrawnCard[]) => {
@@ -307,20 +329,38 @@ const App: React.FC<AppProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900 via-[#0f0c29] to-black text-gray-200 flex flex-col overflow-x-hidden relative font-sans">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900 via-[#0f0c29] to-black text-gray-200 flex flex-col overflow-x-hidden relative font-sans p-8">
 
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+      
+      {/* Phaser Magical Background */}
+      <PhaserGame 
+        config={phaserConfig} 
+        className="absolute inset-0 z-0 pointer-events-none" 
+        style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+      />
 
       {/* Header */}
-      <header className="p-6 text-center z-10 animate-fade-in pt-12 md:pt-6">
+      <header className="text-center z-10 animate-fade-in md:pt-6">
         <h1 className="sr-only">塔罗秘境喵 - 在线塔罗占卜</h1>
         <p className="text-indigo-200 text-xs md:text-sm mt-3 font-light tracking-[0.2em] uppercase opacity-80">
           喵呜~ 洞悉过去 · 把握当下 · 预见未来
         </p>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-3 relative z-10 w-full max-w-4xl mx-auto min-h-[600px]">
+      <main className="flex-1 flex flex-col items-center justify-start pt-8 relative z-10 w-full max-w-4xl mx-auto min-h-[600px]">
+
+        {/* Global Cat Avatar */}
+        <div className={`transition-all duration-1000 ease-in-out flex flex-col items-center z-20 relative pointer-events-none ${stage === 'intro' ? 'mb-10 mt-20' : 'mb-6 mt-0'}`}>
+           <div className={`relative transition-all duration-1000 ease-in-out rounded-full overflow-hidden border-4 border-indigo-500/30 shadow-[0_0_50px_rgba(168,85,247,0.5)] avatar-emerge
+             ${stage === 'intro' ? 'w-48 h-48' : 'w-24 h-24'}
+             ${loading ? 'animate-spin border-yellow-500/50' : ''}
+           `}>
+               <img src={TAROT_CAT_AVATAR} className="w-full h-full object-cover" alt="Tarot Cat" />
+               <div className="absolute -inset-4 bg-gradient-to-t from-purple-500/20 to-transparent blur-xl rounded-full animate-pulse pointer-events-none"></div>
+           </div>
+        </div>
 
         {stage === 'intro' && (
           <IntroStage
@@ -379,6 +419,7 @@ const App: React.FC<AppProps> = ({ onBack }) => {
             avatarUrl={TAROT_CAT_AVATAR}
             onReveal={handleReveal}
             onReset={resetGame}
+            onRetry={() => generateInterpretation(drawnCards)}
           />
         )}
       </main>

@@ -17,7 +17,7 @@ export const CatJudgeAvatar = ({
   </div>
 );
 
-export const GossipCatAvatar = ({
+export const MBTICatAvatar = ({
   className = "w-24 h-24",
 }: {
   className?: string;
@@ -27,7 +27,7 @@ export const GossipCatAvatar = ({
   >
     <img
       src="https://pic1.imgdb.cn/item/6938117f00233646958db3b6.png"
-      alt="吃瓜喵头像"
+      alt="喵BTI头像"
       className="w-full h-full object-cover"
     />
   </div>

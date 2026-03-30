@@ -2649,6 +2649,11 @@ eventemitter3@^4.0.0:
   resolved "https://npm.poizon.com/eventemitter3/-/eventemitter3-4.0.7.tgz"
   integrity sha1-Lem2j2Uo1WRO9cWVJqG0oHMGFp8=
 
+eventemitter3@^5.0.1:
+  version "5.0.4"
+  resolved "https://npm.poizon.com/eventemitter3/-/eventemitter3-5.0.4.tgz"
+  integrity sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==
+
 events-universal@^1.0.0:
   version "1.0.1"
   resolved "https://npm.poizon.com/events-universal/-/events-universal-1.0.1.tgz"
@@ -4407,6 +4412,13 @@ pend@~1.2.0:
   version "1.2.0"
   resolved "https://npm.poizon.com/pend/-/pend-1.2.0.tgz"
   integrity sha1-elfrVQpng/kRUzH89GY9XI4AelA=
+
+phaser@^3.90.0:
+  version "3.90.0"
+  resolved "https://npm.poizon.com/phaser/-/phaser-3.90.0.tgz"
+  integrity sha512-/cziz/5ZIn02uDkC9RzN8VF9x3Gs3XdFFf9nkiMEQT3p7hQlWuyjy4QWosU802qqno2YSLn2BfqwOKLv/sSVfQ==
+  dependencies:
+    eventemitter3 "^5.0.1"
 
 picocolors@^1.1.1:
   version "1.1.1"

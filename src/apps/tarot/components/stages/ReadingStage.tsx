@@ -14,6 +14,7 @@ interface ReadingStageProps {
     avatarUrl: string;
     onReveal: (index: number) => void;
     onReset: () => void;
+    onRetry: () => void;
 }
 
 const ReadingStage: React.FC<ReadingStageProps> = ({
@@ -24,7 +25,8 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
     question,
     avatarUrl,
     onReveal,
-    onReset
+    onReset,
+    onRetry
 }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const resultRef = useRef<HTMLDivElement>(null);
@@ -89,13 +91,20 @@ const ReadingStage: React.FC<ReadingStageProps> = ({
             {loading && (
                 <div className="flex flex-col items-center gap-4 mt-12 animate-fade-in py-8" ref={scrollRef}>
                     <div className="relative">
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-yellow-500/50 relative z-10 animate-pulse">
-                            <img src={avatarUrl} className="w-full h-full object-cover" alt="猫猫正在思考..." />
-                        </div>
-                        <Loader2 className="w-32 h-32 text-yellow-500 animate-spin absolute -top-4 -left-4 opacity-50" />
+                        <Loader2 className="w-16 h-16 text-yellow-500 animate-spin opacity-80" />
                         <div className="absolute inset-0 blur-lg bg-yellow-500/30 animate-pulse"></div>
                     </div>
                     <p className="text-purple-200 font-serif text-lg tracking-widest mt-4">{loadingMsg}</p>
+                </div>
+            )}
+
+            {/* Error State */}
+            {!loading && !reading && drawnCards.every(c => c.isRevealed) && (
+                <div className="flex flex-col items-center gap-4 mt-12 animate-fade-in py-8" ref={scrollRef}>
+                    <p className="text-red-300 font-serif text-lg tracking-widest mt-4">灵性链接似乎中断了，请重试喵...</p>
+                    <Button onClick={onRetry} variant="primary">
+                        重新连接喵
+                    </Button>
                 </div>
             )}
 

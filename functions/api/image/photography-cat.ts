@@ -1,7 +1,6 @@
 import {
   safeParseJSON,
   getPhotographyStylePrompt,
-  updatePhotographyStylesCache,
   createDeepSeekClient,
   generatePhotographyPrompt,
 } from "../../utils";
@@ -37,8 +36,6 @@ export async function onRequestPost(context: any) {
             if (typeof generated === "string" && generated) {
               console.log(`Generated prompt for "${style}":`, generated);
               cachedPrompt = generated;
-              // Update cache for future use
-              updatePhotographyStylesCache({ title: style, prompt: generated });
             }
           } catch (err) {
             console.error(`Failed to generate prompt for style "${style}":`, err);

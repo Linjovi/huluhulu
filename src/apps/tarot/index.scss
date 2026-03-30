@@ -28,8 +28,30 @@
     animation: landCard 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
+@keyframes emerge {
+    0% {
+        filter: brightness(0) drop-shadow(0 0 0px rgba(168,85,247,0));
+        opacity: 0;
+        transform: translateY(40px) scale(0.9);
+    }
+    50% {
+        filter: brightness(0.5) drop-shadow(0 0 20px rgba(168,85,247,0.3));
+        opacity: 0.8;
+        transform: translateY(10px) scale(0.95);
+    }
+    100% {
+        filter: brightness(1) drop-shadow(0 0 50px rgba(168,85,247,0.5));
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.avatar-emerge {
+    animation: emerge 2.5s ease-out forwards;
+}
+
 .animate-fade-in {
-    animation: fadeIn 1s ease-out forwards;
+    animation: fadeInMystic 1.2s ease-out forwards;
 }
 
 .animate-fade-in-up {
@@ -57,13 +79,17 @@
     transform-origin: bottom center;
 }
 
-@keyframes fadeIn {
+@keyframes fadeInMystic {
     from {
         opacity: 0;
+        filter: blur(10px);
+        transform: scale(0.95);
     }
 
     to {
         opacity: 1;
+        filter: blur(0px);
+        transform: scale(1);
     }
 }
 

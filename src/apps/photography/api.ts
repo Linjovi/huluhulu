@@ -1,4 +1,4 @@
-import { HotStyle, PhotographyResponse } from "./types";
+import { PhotographyResponse } from "./types";
 
 interface PhotographyApiResponse {
   code: number;
@@ -100,26 +100,6 @@ export const getPhotography = async (
   }
 };
 
-export const getPhotographyStyles = async (): Promise<HotStyle[]> => {
-  try {
-    const response = await fetch("/api/image/photography-styles");
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
-    }
-    const result: any = await response.json();
-    if (result.code !== 0) {
-      throw new Error(result.message || "获取灵感失败");
-    }
-    return result.data.map((item: any) => ({
-      title: item.title,
-      source: item.source,
-      prompt: item.prompt,
-    }));
-  } catch (error) {
-    console.error("Photography Styles API Error:", error);
-    throw new Error("获取灵感失败了喵~");
-  }
-};
 
 interface PollResult {
   status: "running" | "succeeded" | "failed";
