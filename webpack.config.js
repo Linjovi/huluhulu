@@ -8,6 +8,7 @@ module.exports = {
     blog: './src/blog.tsx',
     'blog/detail': './src/blog-detail.tsx',
     'blog/edit': './src/blog-edit.tsx',
+    weather: './src/weather.tsx',
   },
   output: {
     path: path.resolve(__dirname, 'public'),
@@ -22,6 +23,7 @@ module.exports = {
     historyApiFallback: {
       rewrites: [
         { from: /^\/blog/, to: '/blog/index.html' },
+        { from: /^\/weather/, to: '/weather/index.html' },
         { from: /./, to: '/index.html' },
       ],
     },
@@ -96,6 +98,12 @@ module.exports = {
       filename: 'blog/edit/index.html',
       favicon: './src/favicon.png',
       chunks: ['blog/edit'],
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/weather.html',
+      filename: 'weather/index.html',
+      favicon: './src/favicon.png',
+      chunks: ['weather'],
     }),
     new CopyWebpackPlugin({
       patterns: [
