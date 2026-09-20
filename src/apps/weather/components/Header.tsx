@@ -43,14 +43,11 @@ export const Header: React.FC<HeaderProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                  天象观测预测
+                  出游助手
                 </h1>
-                <span className="text-[11px] font-medium px-1.5 py-0.2 rounded bg-sky-50 text-sky-700 border border-sky-200">
-                  杭州及周边
-                </span>
               </div>
               <p className="text-xs text-slate-500 hidden sm:block">
-                出游 · 云海 · 朝霞 · 晚霞 综合气象指数与出行指南
+                徒步 · 云海 · 日出 · 晚霞 综合气象指数与出行指南
               </p>
             </div>
           </div>

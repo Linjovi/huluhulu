@@ -1,6 +1,6 @@
 import React from 'react';
 import { PhenomenonType } from '../types';
-import { Compass, CloudFog, Sunrise, Sunset } from 'lucide-react';
+import { Footprints, CloudFog, Sunrise, Sunset } from 'lucide-react';
 
 interface PhenomenonTabBarProps {
   activeTab: PhenomenonType;
@@ -21,10 +21,10 @@ export const PhenomenonTabBar: React.FC<PhenomenonTabBarProps> = ({
   }[] = [
     {
       id: 'travel_weather',
-      label: '出游',
-      fullLabel: '出游指数',
+      label: '徒步',
+      fullLabel: '徒步指数',
       icon: (isActive) => (
-        <Compass
+        <Footprints
           className={`w-5 h-5 transition-transform duration-200 ${
             isActive ? 'scale-110 text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'
           }`}
@@ -48,9 +48,9 @@ export const PhenomenonTabBar: React.FC<PhenomenonTabBarProps> = ({
       activeBg: 'bg-sky-50/90',
     },
     {
-      id: 'sunrise_glow',
-      label: '朝霞',
-      fullLabel: '朝霞破晓',
+      id: 'sunrise',
+      label: '日出',
+      fullLabel: '红日初升',
       icon: (isActive) => (
         <Sunrise
           className={`w-5 h-5 transition-transform duration-200 ${
@@ -86,7 +86,10 @@ export const PhenomenonTabBar: React.FC<PhenomenonTabBarProps> = ({
       <div className="max-w-xl mx-auto px-2 sm:px-4">
         <div className="grid grid-cols-4 gap-1 sm:gap-2">
           {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
+            const isActive =
+              activeTab === tab.id ||
+              (tab.id === 'sunrise' && (activeTab as string) === 'sunrise_glow') ||
+              (tab.id === 'sunrise_glow' && (activeTab as string) === 'sunrise');
 
             return (
               <button
@@ -107,7 +110,7 @@ export const PhenomenonTabBar: React.FC<PhenomenonTabBarProps> = ({
                         ? 'bg-emerald-500'
                         : tab.id === 'cloud_sea'
                         ? 'bg-sky-500'
-                        : tab.id === 'sunrise_glow'
+                        : tab.id === 'sunrise' || tab.id === 'sunrise_glow'
                         ? 'bg-rose-500'
                         : 'bg-amber-500'
                     }`}

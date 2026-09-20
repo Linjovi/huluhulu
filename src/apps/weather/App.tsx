@@ -20,7 +20,7 @@ export default function App() {
   const [rawApiData, setRawApiData] = useState<WeatherApiResponse | null>(null);
   const [selectedDayIdx, setSelectedDayIdx] = useState<number>(0);
 
-  // Tab-based switching: 'travel_weather' (Tab 1) | 'cloud_sea' (Tab 2) | 'sunrise_glow' (Tab 3) | 'sunset_glow' (Tab 4)
+  // Tab-based switching: 'travel_weather' (Tab 1) | 'cloud_sea' (Tab 2) | 'sunrise' (Tab 3) | 'sunset_glow' (Tab 4)
   const [activeTab, setActiveTab] = useState<PhenomenonType>('travel_weather');
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -155,7 +155,15 @@ export default function App() {
                 >
                   <div className="flex items-center gap-2">
                     <Layers className="w-4 h-4 text-sky-600" />
-                    <span>24小时垂直分层云量与微气候时间轴（深入剖析）</span>
+                    <span>
+                      {activeTab === 'travel_weather'
+                        ? '24小时逐时徒步气象与舒适度（深入剖析）'
+                        : activeTab === 'cloud_sea'
+                        ? '24小时云海低空逆温与水汽层（深入剖析）'
+                        : activeTab === 'sunrise' || activeTab === 'sunrise_glow'
+                        ? '24小时日出东向光路与地平通透度（深入剖析）'
+                        : '24小时晚霞西向光路与火烧云天幕（深入剖析）'}
+                    </span>
                   </div>
                   {showSkyTimeline ? (
                     <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -171,6 +179,7 @@ export default function App() {
                       targetDate={currentDay.date}
                       sunriseTime={currentDay.sunrise}
                       sunsetTime={currentDay.sunset}
+                      activePhenomenon={activeTab}
                     />
                   </div>
                 )}
@@ -185,8 +194,8 @@ export default function App() {
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
           <div className="flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-sky-600" />
-            <span className="font-semibold text-slate-700">天象与出游预测</span>
-            <span>· 杭州及周边综合户外出行指南</span>
+            <span className="font-semibold text-slate-700">出游助手</span>
+            <span>· 户外徒步与天象气象预测</span>
           </div>
 
           <div className="flex items-center gap-3 text-slate-500">
@@ -202,7 +211,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Mobile-First Bottom Navigation Bar: 4 Tabs (出游·云海·朝霞·晚霞) */}
+      {/* Mobile-First Bottom Navigation Bar: 4 Tabs (出游·云海·日出·晚霞) */}
       {currentDay && (
         <PhenomenonTabBar
           activeTab={activeTab}

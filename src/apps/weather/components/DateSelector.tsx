@@ -29,11 +29,12 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   const getPhenomenonName = (type: PhenomenonType) => {
     switch (type) {
       case 'travel_weather':
-        return '出游指数';
+        return '徒步指数';
       case 'cloud_sea':
         return '云海指数';
+      case 'sunrise':
       case 'sunrise_glow':
-        return '朝霞指数';
+        return '日出指数';
       case 'sunset_glow':
       default:
         return '晚霞指数';
@@ -47,6 +48,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
         return 'bg-emerald-50/90 border-emerald-500 ring-1 ring-emerald-500/30';
       case 'cloud_sea':
         return 'bg-sky-50/90 border-sky-500 ring-1 ring-sky-500/30';
+      case 'sunrise':
       case 'sunrise_glow':
         return 'bg-rose-50/90 border-rose-500 ring-1 ring-rose-500/30';
       case 'sunset_glow':

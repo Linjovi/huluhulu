@@ -51,7 +51,7 @@ export interface WeatherApiResponse {
   daily: DailyWeatherData;
 }
 
-export type PhenomenonType = 'travel_weather' | 'cloud_sea' | 'sunrise_glow' | 'sunset_glow' | 'starry_sky';
+export type PhenomenonType = 'travel_weather' | 'cloud_sea' | 'sunrise' | 'sunrise_glow' | 'sunset_glow' | 'starry_sky';
 
 export type FactorStatus = 'optimal' | 'good' | 'moderate' | 'unfavorable';
 
@@ -109,6 +109,7 @@ export interface DailyForecastEvaluation {
   predictions: {
     travel_weather: PhenomenonPrediction;
     cloud_sea: PhenomenonPrediction;
+    sunrise: PhenomenonPrediction;
     sunrise_glow: PhenomenonPrediction;
     sunset_glow: PhenomenonPrediction;
     starry_sky: PhenomenonPrediction;

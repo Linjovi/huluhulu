@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   PhenomenonPrediction,
   PhenomenonType,
@@ -34,12 +34,39 @@ export const PhenomenonDetailView: React.FC<PhenomenonDetailViewProps> = ({
 }) => {
   const [showTips, setShowTips] = useState(false);
 
+  // Default selected hour (peak score hour or first optimal hour)
+  const defaultHourIndex = useMemo(() => {
+    if (!prediction.hourlyScores || prediction.hourlyScores.length === 0) return 0;
+    let maxIdx = 0;
+    let maxScore = -1;
+    prediction.hourlyScores.forEach((h, idx) => {
+      if (h.score > maxScore) {
+        maxScore = h.score;
+        maxIdx = idx;
+      }
+    });
+    return maxIdx;
+  }, [prediction.id, prediction.hourlyScores]);
+
+  const [selectedHour, setSelectedHour] = useState<number>(defaultHourIndex);
+
+  useEffect(() => {
+    setSelectedHour(defaultHourIndex);
+  }, [defaultHourIndex, prediction.id]);
+
+  // Ensure activeHourIndex is always within valid bounds so UI never flickers or collapses
+  const activeHourIndex =
+    selectedHour >= 0 && selectedHour < (prediction.hourlyScores?.length ?? 0)
+      ? selectedHour
+      : defaultHourIndex;
+  const activeHourData = prediction.hourlyScores?.[activeHourIndex];
+
   const getTheme = (type: PhenomenonType) => {
     switch (type) {
       case 'travel_weather':
         return {
-          icon: <Compass className="w-5 h-5 text-emerald-600" />,
-          title: '户外出游',
+          icon: <Footprints className="w-5 h-5 text-emerald-600" />,
+          title: '户外徒步',
           pillBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
           accentColor: 'text-emerald-600',
           gaugeColor: 'stroke-emerald-500',
@@ -58,10 +85,11 @@ export const PhenomenonDetailView: React.FC<PhenomenonDetailViewProps> = ({
           bannerBg: 'from-sky-50/80 via-white to-sky-50/40 border-sky-200',
           bestTimeBg: 'bg-sky-50 border-sky-200 text-sky-900',
         };
+      case 'sunrise':
       case 'sunrise_glow':
         return {
           icon: <Sunrise className="w-5 h-5 text-rose-600" />,
-          title: '朝霞破晓',
+          title: '红日初升',
           pillBg: 'bg-rose-50 text-rose-700 border-rose-200',
           accentColor: 'text-rose-600',
           gaugeColor: 'stroke-rose-500',
@@ -90,30 +118,30 @@ export const PhenomenonDetailView: React.FC<PhenomenonDetailViewProps> = ({
     switch (status) {
       case 'optimal':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 leading-none">
+            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
             极佳
           </span>
         );
       case 'good':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
-            <CheckCircle2 className="w-3 h-3 text-sky-600" />
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200 shrink-0 leading-none">
+            <CheckCircle2 className="w-2.5 h-2.5 text-sky-600" />
             良好
           </span>
         );
       case 'moderate':
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-            <AlertCircle className="w-3 h-3 text-amber-600" />
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 shrink-0 leading-none">
+            <AlertCircle className="w-2.5 h-2.5 text-amber-600" />
             一般
           </span>
         );
       case 'unfavorable':
       default:
         return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-            <AlertCircle className="w-3 h-3 text-slate-400" />
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 shrink-0 leading-none">
+            <AlertCircle className="w-2.5 h-2.5 text-slate-400" />
             不利
           </span>
         );
@@ -187,14 +215,28 @@ export const PhenomenonDetailView: React.FC<PhenomenonDetailViewProps> = ({
                 <span className={`text-2xl font-mono font-black ${theme.accentColor} leading-none`}>
                   {prediction.score}
                 </span>
-                <span className="text-[10px] text-slate-600 font-medium">观测指数</span>
+                <span className="text-[10px] text-slate-600 font-medium">
+                  {prediction.id === 'travel_weather' ? '徒步指数' : '观测指数'}
+                </span>
               </div>
             </div>
 
             <div className="text-left">
-              <div className="text-xs text-slate-600 font-medium">可观测评级</div>
+              <div className="text-xs text-slate-600 font-medium">
+                {prediction.id === 'travel_weather' ? '出行评级' : '可观测评级'}
+              </div>
               <div className="text-sm font-bold text-slate-900 mt-0.5">
-                {prediction.score >= 80 ? '极力推荐' : prediction.score >= 60 ? '值得一守' : '建议观望'}
+                {prediction.id === 'travel_weather'
+                  ? prediction.score >= 80
+                    ? '强烈推荐'
+                    : prediction.score >= 60
+                    ? '适宜徒步'
+                    : '谨慎出行'
+                  : prediction.score >= 80
+                  ? '极力推荐'
+                  : prediction.score >= 60
+                  ? '值得一守'
+                  : '建议观望'}
               </div>
               <div className="text-[11px] text-slate-600 mt-0.5">
                 满分 100 分制
@@ -203,66 +245,66 @@ export const PhenomenonDetailView: React.FC<PhenomenonDetailViewProps> = ({
           </div>
         </div>
 
-        {/* Highlighted Best Observation Window */}
-        <div className={`mt-4 p-3.5 rounded-xl border ${theme.bestTimeBg} flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs`}>
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-white shadow-xs">
+        {/* Highlighted Best Observation Window / Hiking Window */}
+        <div className={`mt-4 p-3.5 sm:p-4 rounded-xl border ${theme.bestTimeBg} space-y-2.5 shadow-xs`}>
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2 rounded-lg bg-white shadow-xs shrink-0 mt-0.5 sm:mt-0">
               <Clock className="w-4 h-4 text-slate-700" />
             </div>
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                最佳观测时间窗口
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-bold tracking-wider text-slate-600 mb-0.5">
+                {prediction.id === 'travel_weather' ? '推荐徒步出行时间' : '最佳观测时间窗口'}
               </div>
-              <div className="text-sm sm:text-base font-mono font-black text-slate-900">
+              <div className="text-sm sm:text-base font-mono font-black text-slate-900 leading-snug">
                 {prediction.bestTimeWindow}
               </div>
             </div>
           </div>
 
           {prediction.countdownHint && (
-            <div className="text-xs text-slate-600 flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-lg border border-slate-200">
-              <Info className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-              <span>{prediction.countdownHint}</span>
+            <div className="flex items-center gap-2 text-xs text-slate-700 bg-white/90 px-3 py-2 rounded-lg border border-slate-200/80 leading-relaxed">
+              <Info className="w-3.5 h-3.5 text-sky-600 shrink-0 self-start mt-0.5" />
+              <span className="flex-1 font-medium">{prediction.countdownHint}</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Key Meteorological Factors (Simple, Clean, Clear Cards) */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs">
-        <div className="flex items-center justify-between mb-3.5">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-sky-600" />
+      {/* Key Meteorological Factors (Compact & Clean) */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 shadow-xs">
+        <div className="flex items-center justify-between mb-2 sm:mb-2.5">
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-sky-600" />
             气象成因核心指标
           </h3>
-          <span className="text-xs text-slate-500">ECMWF / GFS 云量与逆温层解算</span>
+          <span className="text-[11px] text-slate-500">ECMWF / GFS 云量与气象解算</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
           {prediction.factors.map((factor, idx) => (
             <div
               key={idx}
-              className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between"
+              className="px-2.5 py-2 rounded-xl bg-slate-50/80 border border-slate-200/70 flex flex-col justify-center gap-1 hover:bg-slate-50 transition-colors"
             >
-              <div className="flex items-center justify-between gap-1 mb-1">
+              <div className="flex items-center justify-between gap-1.5">
                 <div className="flex items-center gap-1.5 min-w-0">
                   {factor.weightLabel && (
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 font-medium">
+                    <span className="text-[9px] font-medium px-1 py-0.2 rounded bg-slate-200/80 text-slate-600 shrink-0 leading-tight">
                       {factor.weightLabel}
                     </span>
                   )}
-                  <span className="text-xs font-bold text-slate-800 truncate">
+                  <span className="text-xs font-semibold text-slate-800 truncate">
                     {factor.name}
                   </span>
                 </div>
                 {getStatusBadge(factor.status)}
               </div>
 
-              <div className="flex items-baseline justify-between mt-1.5">
-                <span className="text-sm font-mono font-bold text-slate-900">
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="font-mono font-bold text-slate-900 text-xs shrink-0">
                   {factor.value}
                 </span>
-                <span className="text-xs text-slate-500 truncate max-w-[65%] text-right">
+                <span className="text-[11px] text-slate-500 truncate text-right">
                   {factor.hint}
                 </span>
               </div>
@@ -273,37 +315,52 @@ export const PhenomenonDetailView: React.FC<PhenomenonDetailViewProps> = ({
 
       {/* 24-Hour Observation Score Trend Bar */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5 min-h-[34px]">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5 shrink-0">
             <Clock className="w-4 h-4 text-sky-600" />
-            24 小时观测指数走势
+            {prediction.id === 'travel_weather'
+              ? '24 小时逐时适宜指数走势'
+              : '24 小时观测指数走势'}
           </h3>
-          <span className="text-xs text-slate-500">彩色高光时段为最佳观测窗口</span>
+
+          {activeHourData && (
+            <div className="flex items-center gap-2 text-xs font-mono bg-slate-100/90 px-2.5 py-1.5 rounded-lg border border-slate-200/80 shrink-0 self-start sm:self-auto">
+              <span className="font-bold text-sky-700">
+                {activeHourData.displayHour}
+              </span>
+              <span className="font-bold text-amber-600">
+                {activeHourData.score}分
+              </span>
+              <span className="text-slate-600 font-sans text-[11px] truncate max-w-[160px] sm:max-w-[260px]">
+                {activeHourData.detail}
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-end gap-1 overflow-x-auto pb-2 pt-3 scrollbar-thin scrollbar-thumb-slate-300">
+        <div className="flex items-end gap-1 overflow-x-auto pb-2 pt-2 scrollbar-thin scrollbar-thumb-slate-300">
           {prediction.hourlyScores.map((h, i) => {
             const barHeight = Math.max(6, Math.round((h.score / 100) * 50));
             const isHighlight = h.score >= 60;
+            const isSelected = activeHourIndex === i;
 
             return (
               <div
                 key={i}
-                className="shrink-0 flex flex-col items-center gap-1 w-8 sm:w-9 group relative cursor-pointer"
+                id={`score-hour-${i}`}
+                onClick={() => setSelectedHour(i)}
+                title={`点击查看 ${h.displayHour} 详情 (${h.score}分)`}
+                className={`shrink-0 flex flex-col items-center gap-1 w-8 sm:w-9 cursor-pointer transition-all rounded-lg p-0.5 ${
+                  isSelected
+                    ? 'bg-sky-50 ring-1.5 ring-sky-500 shadow-xs'
+                    : 'hover:bg-slate-50'
+                }`}
               >
-                {/* Tooltip on hover */}
-                <div className="absolute bottom-full mb-1.5 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
-                  <div className="bg-slate-900 text-white text-[10px] py-1 px-2 rounded-lg shadow-md whitespace-nowrap">
-                    <div className="font-bold text-amber-300">{h.displayHour} · {h.score}分</div>
-                    <div className="text-slate-300">{h.detail}</div>
-                  </div>
-                </div>
-
                 {/* Vertical Bar */}
                 <div className="w-5 bg-slate-100 rounded-t-sm flex items-end justify-center h-14">
                   <div
                     style={{ height: `${barHeight}px` }}
-                    className={`w-full rounded-t-sm transition-all duration-300 ${
+                    className={`w-full rounded-t-sm transition-all duration-200 ${
                       isHighlight
                         ? `${theme.progressBg} shadow-xs`
                         : 'bg-slate-300'
@@ -312,7 +369,11 @@ export const PhenomenonDetailView: React.FC<PhenomenonDetailViewProps> = ({
                 </div>
 
                 {/* Hour label */}
-                <span className="text-[10px] font-mono text-slate-500">
+                <span
+                  className={`text-[10px] font-mono ${
+                    isSelected ? 'font-bold text-sky-800' : 'text-slate-500'
+                  }`}
+                >
                   {h.displayHour.substring(0, 2)}
                 </span>
               </div>

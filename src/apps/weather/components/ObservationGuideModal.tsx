@@ -62,7 +62,7 @@ export const ObservationGuideModal: React.FC<ObservationGuideModalProps> = ({
             }`}
           >
             <Sunrise className="w-4 h-4" />
-            <span>朝霞与火烧云秘诀</span>
+            <span>日出与晚霞观测秘诀</span>
           </button>
 
           <button
@@ -117,30 +117,28 @@ export const ObservationGuideModal: React.FC<ObservationGuideModalProps> = ({
               <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-100 text-rose-900">
                 <h4 className="font-bold flex items-center gap-1.5 mb-1.5">
                   <Lightbulb className="w-4 h-4 text-rose-600" />
-                  火烧云与绚丽霞光的物理条件
+                  日出观赏与晚霞火烧云的核心区别
                 </h4>
                 <p>
-                  朝晚霞源自阳光穿过极长大气路径时的<strong>瑞利散射</strong>（蓝紫光被散射尽，红橙长波长光线照亮云底）。
+                  <strong>观赏日出</strong>看重的是<strong>东向地平通透与晴空万里</strong>（亲眼目睹红日跃出）；而<strong>晚霞</strong>则需要<strong>中高云充当天幕荧幕</strong>来反射漫天火红。
                 </p>
               </div>
 
               <div className="space-y-2 text-slate-700">
-                <h5 className="font-bold text-slate-900">1. 地平线“光路通道”必须通畅</h5>
+                <h5 className="font-bold text-slate-900">1. 日出关键：东面地平低云是头号克星</h5>
                 <p>
-                  朝霞看<strong>东面低空</strong>，晚霞看<strong>西面低空</strong>。如果地平线有厚重低云遮挡，落日余晖在射入天空前就会被完全截断，天色将瞬间转灰暗。
+                  日出观赏时，东面地平线 100~200 公里范围低云量越低越好（<strong>低云 &lt; 15% 最佳</strong>）。如果地平线有厚重层积云墙阻挡，日轮刚升起就会被完全遮死，无法看到破晓瞬间。
                 </p>
 
-                <h5 className="font-bold text-slate-900">2. “天幕投影幕布”的云量最佳区间：30% ~ 70%</h5>
+                <h5 className="font-bold text-slate-900">2. 日出关键：总云量低方现“鸭蛋黄”金轮</h5>
                 <p>
-                  如果高空万里无云，只有单调渐变；若中高云层达 100% 且密不透风，光线无法透入。透光的高积云、卷积云是最好的“天空荧幕”。
+                  天空总云量低（&lt; 25%）时，大气通透度最高，日轮轮廓最为清晰纯净；若高空有轻薄高卷云，则会伴随漫天散射晨辉。
                 </p>
 
-                <h5 className="font-bold text-slate-900">3. 火烧云的三段演变</h5>
-                <ul className="list-disc pl-5 space-y-1 text-slate-600">
-                  <li><strong>日落前 10 分钟</strong>：金黄明亮阶段，地景拉出长长金光。</li>
-                  <li><strong>日落后 5 ~ 15 分钟</strong>：真正的火烧云爆发巅峰！红橙色彩最浓郁饱满。</li>
-                  <li><strong>日落后 20 ~ 35 分钟</strong>：蓝调紫霞阶段，天顶深蓝与天边粉紫交织。</li>
-                </ul>
+                <h5 className="font-bold text-slate-900">3. 晚霞火烧云：需要 30% ~ 70% 中高空云幕</h5>
+                <p>
+                  晚霞与日落火烧云需要西面低空通透，且中高空有适量透光高积云或卷积云承接太阳余晖，反射出绚丽红橙霞光。
+                </p>
               </div>
             </div>
           )}
@@ -165,10 +163,16 @@ export const ObservationGuideModal: React.FC<ObservationGuideModalProps> = ({
                       <td className="p-2.5">ND64/ND1000 减光镜、CPL偏振镜</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-bold text-rose-700">朝霞/晚霞</td>
-                      <td className="p-2.5">24-70mm 标准变焦 / 超广角</td>
-                      <td className="p-2.5 font-mono">f/8, ISO 100, 曝光补偿 -0.7EV (压暗保色彩)</td>
-                      <td className="p-2.5">软渐变灰滤镜 (Soft GND 0.9)</td>
+                      <td className="p-2.5 font-bold text-rose-700">日出</td>
+                      <td className="p-2.5">70-200mm/100-400mm (日轮特写) / 16-35mm (晨光广角)</td>
+                      <td className="p-2.5 font-mono">f/8-f/11, ISO 100, 点测光或曝光补偿 -0.7EV (保高光日轮细节)</td>
+                      <td className="p-2.5">软渐变灰滤镜 (Soft GND 0.9)、黑卡、稳固三脚架</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-bold text-amber-700">晚霞/火烧云</td>
+                      <td className="p-2.5">24-70mm 标准变焦 / 16-35mm 超广角</td>
+                      <td className="p-2.5 font-mono">f/8, ISO 100, 曝光补偿 -0.7EV ~ -1.0EV (压暗饱和度)</td>
+                      <td className="p-2.5">软渐变灰滤镜 (Soft GND 0.9)、三脚架</td>
                     </tr>
                   </tbody>
                 </table>
